@@ -5,20 +5,59 @@
 @layer base {
   html { scroll-behavior: smooth; }
 
-  /* ── Light theme: warm cream ── */
+  /* ── Light theme: Refined crisp modern vibe ── */
   body {
-    @apply bg-slate-50 text-slate-800 font-sans antialiased min-h-screen;
+    @apply bg-slate-50 text-slate-800 font-sans antialiased min-h-screen selection:bg-primary-200 selection:text-primary-900;
+    /* Soft textured background for light mode */
+    background-image: radial-gradient(circle at 15% 50%, rgba(20, 184, 166, 0.04), transparent 25%),
+                      radial-gradient(circle at 85% 30%, rgba(139, 92, 246, 0.04), transparent 25%);
+    background-attachment: fixed;
   }
 
-  /* ── Dark theme: warm cyan/slate ── */
+  /* ── Dark theme: Deep immersive vibe ── */
   .dark body {
-    @apply bg-slate-900 text-slate-100;
+    @apply bg-slate-950 text-slate-100 selection:bg-primary-500/30 selection:text-primary-100;
+    /* Deep rich background with subtle glows for dark mode */
+    background-image: radial-gradient(circle at 15% 50%, rgba(20, 184, 166, 0.08), transparent 25%),
+                      radial-gradient(circle at 85% 30%, rgba(139, 92, 246, 0.08), transparent 25%);
+    background-attachment: fixed;
   }
+}
+
+@layer utilities {
+  .glass {
+    @apply bg-white/70 backdrop-blur-md border border-white/20 shadow-[0_8px_32px_0_rgba(31,38,135,0.07)];
+  }
+  .dark .glass {
+    @apply bg-slate-900/60 backdrop-blur-md border border-slate-800/50 shadow-[0_8px_32px_0_rgba(0,0,0,0.3)];
+  }
+  
+  .glass-card {
+    @apply bg-white/80 backdrop-blur-xl border border-slate-200/50 shadow-sm hover:shadow-md transition-shadow;
+  }
+  .dark .glass-card {
+    @apply bg-slate-900/80 backdrop-blur-xl border border-slate-800/60 shadow-none hover:shadow-lg hover:shadow-black/20 transition-shadow;
+  }
+}
+
+/* Scrollbar styling for webkit */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+::-webkit-scrollbar-thumb {
+  @apply bg-slate-300 rounded-full dark:bg-slate-700;
+}
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-slate-400 dark:bg-slate-600;
 }
 
 /* Smooth theme transitions */
 *, *::before, *::after {
   transition-property: background-color, border-color, color, fill, stroke;
-  transition-duration: 200ms;
-  transition-timing-function: ease;
+  transition-duration: 300ms;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
 }
