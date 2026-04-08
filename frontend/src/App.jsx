@@ -80,7 +80,6 @@ export default function App() {
                         <>
                           <Route path="/"        element={<UserMode addToast={addToast} user={user} />} />
                           <Route path="/safe"    element={<SafeMode addToast={addToast} user={user} />} />
-                          <Route path="/reports" element={<Analytics addToast={addToast} readOnly />} />
                           <Route path="*"        element={<Navigate to="/" replace />} />
                         </>
                       )}

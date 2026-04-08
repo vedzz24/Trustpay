@@ -15,7 +15,6 @@ export default function Navbar({ user, logout, theme, toggleTheme }) {
     ...(isMerchant ? [{ to: '/analytics', label: 'Analytics', Icon: BarChart3 }] : []),
     ...(!isMerchant ? [
       { to: '/safe',    label: 'Safe Mode',  Icon: Shield },
-      { to: '/reports', label: 'Reports',    Icon: FileText },
     ] : []),
   ];
 
