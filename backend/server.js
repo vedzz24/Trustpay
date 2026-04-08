@@ -1,7 +1,21 @@
+<<<<<<< Updated upstream
 const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
 const QRCode = require('qrcode');
+=======
+require('dotenv').config();
+const express  = require('express');
+const cors     = require('cors');
+const mongoose = require('mongoose');
+const seedDatabase = require('./seed');
+
+// ── Route imports ─────────────────────────────────────────────────────────────
+const authRoutes     = require('./routes/auth');
+const paymentRoutes  = require('./routes/payments');
+const analyticsRoutes= require('./routes/analytics');
+const familyRoutes   = require('./routes/family');
+>>>>>>> Stashed changes
 
 const app = express();
 const PORT = 5000;
@@ -9,6 +23,7 @@ const PORT = 5000;
 app.use(cors());
 app.use(express.json());
 
+<<<<<<< Updated upstream
 /* ================== MONGODB CONNECTION ================== */
 mongoose.connect("mongodb://localhost:27017/trustpay")
   .then(() => console.log("✅ MongoDB Connected"))
@@ -106,9 +121,38 @@ app.post('/api/generate-qr', async (req, res) => {
     success: true,
     qrCodeData,
     proofLink
+=======
+// ── MongoDB Connection ─────────────────────────────────────────────────────────
+const MONGO_URI = process.env.MONGO_URI;
+
+if (!MONGO_URI) {
+  console.error('❌ MONGO_URI not found in .env — please set it and restart.');
+  process.exit(1);
+}
+
+mongoose.connect(MONGO_URI)
+  .then(async () => {
+    console.log('✅ Connected to MongoDB');
+    await seedDatabase(); // seed demo data if DB is empty
+  })
+  .catch(err => {
+    console.error('❌ MongoDB connection failed:', err.message);
+    process.exit(1);
+>>>>>>> Stashed changes
   });
+
+// ── API Routes ────────────────────────────────────────────────────────────────
+app.use('/api/auth',      authRoutes);
+app.use('/api/payments',  paymentRoutes);
+app.use('/api/analytics', analyticsRoutes);
+app.use('/api/family',    familyRoutes);
+
+// ── Health check (confirm server is live) ─────────────────────────────────────
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok', db: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected' });
 });
 
+<<<<<<< Updated upstream
 // Scan QR
 app.post('/api/scan-qr', async (req, res) => {
   const { qrData } = req.body;
@@ -132,3 +176,16 @@ app.post('/api/scan-qr', async (req, res) => {
 app.listen(PORT, () => {
   console.log(`🚀 Server running on http://localhost:${PORT}`);
 });
+=======
+// ── 404 handler ────────────────────────────────────────────────────────────────
+app.use((req, res) => {
+  res.status(404).json({ success: false, message: `Route ${req.method} ${req.path} not found` });
+});
+
+// ── Start server ───────────────────────────────────────────────────────────────
+app.listen(PORT, () => {
+  console.log(`🚀 TrustPay backend running → http://localhost:${PORT}`);
+  console.log(`   API docs: GET /api/health | /api/payments | /api/analytics`);
+  console.log(`   Family portal: http://localhost:5173/family`);
+});
+>>>>>>> Stashed changes

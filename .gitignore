@@ -1,4 +1,17 @@
+# Dependencies
 node_modules/
+
+# Environment secrets — never commit this
 .env
+
+# Build output
 dist/
+build/
+
+# OS files
 .DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
