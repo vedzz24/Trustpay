@@ -30,25 +30,25 @@ export default function Auth({ setUser, addToast, theme, toggleTheme }) {
     }
   };
 
-  const inputCls = "w-full px-4 py-3 rounded-xl border border-brown-100 dark:border-brown-400 bg-cream-50 dark:bg-brown-500 text-brown-600 dark:text-cream-200 placeholder-brown-200 dark:placeholder-brown-300 outline-none focus:ring-2 focus:ring-brown-300 dark:focus:ring-brown-200 transition-all";
-  const labelCls = "block text-sm font-semibold text-brown-400 dark:text-cream-300 mb-1.5";
+  const inputCls = "w-full px-4 py-3 rounded-xl border border-slate-100 dark:border-cyan-200 bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-100 placeholder-slate-300 dark:placeholder-slate-500 outline-none focus:ring-2 focus:ring-slate-500 dark:focus:ring-slate-300 transition-all";
+  const labelCls = "block text-sm font-semibold text-slate-500 dark:text-slate-200 mb-1.5";
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-cream-200 dark:bg-brown-600 transition-colors">
+    <div className="min-h-screen flex items-center justify-center p-4 bg-slate-50 dark:bg-slate-900 transition-colors">
       {/* Theme toggle */}
-      <button onClick={toggleTheme} className="fixed top-4 right-4 p-2 rounded-lg bg-cream-100 dark:bg-brown-500 border border-brown-100 dark:border-brown-400 text-brown-300 dark:text-cream-300 hover:bg-cream-300 dark:hover:bg-brown-400 transition-colors shadow-sm">
+      <button onClick={toggleTheme} className="fixed top-4 right-4 p-2 rounded-lg bg-white dark:bg-slate-800 border border-slate-100 dark:border-cyan-200 text-slate-500 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-cyan-500 transition-colors shadow-sm">
         {theme === 'dark' ? <Sun className="w-5 h-5 text-warning" /> : <Moon className="w-5 h-5" />}
       </button>
 
       <div className="w-full max-w-md">
-        <div className="bg-cream-100 dark:bg-brown-500 rounded-3xl shadow-xl border border-brown-100 dark:border-brown-400 p-8">
+        <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-xl border border-slate-100 dark:border-cyan-200 p-8">
           {/* Logo */}
           <div className="flex flex-col items-center mb-8">
-            <div className="w-14 h-14 rounded-2xl bg-brown-400 flex items-center justify-center text-cream-100 font-black text-2xl shadow-lg mb-4">T</div>
-            <h1 className="text-2xl font-black text-brown-500 dark:text-cream-200">
+            <div className="w-14 h-14 rounded-2xl bg-cyan-500 flex items-center justify-center text-white font-black text-2xl shadow-lg mb-4">T</div>
+            <h1 className="text-2xl font-black text-cyan-600 dark:text-slate-100">
               {isLogin ? 'Welcome back' : 'Join TrustPay'}
             </h1>
-            <p className="text-sm text-brown-300 dark:text-brown-200 mt-1 text-center">
+            <p className="text-sm text-slate-500 dark:text-slate-300 mt-1 text-center">
               India's trusted payment verification layer
             </p>
           </div>
@@ -79,8 +79,8 @@ export default function Auth({ setUser, addToast, theme, toggleTheme }) {
                     <button key={role} type="button" onClick={() => set('role', role)}
                       className={`py-3 rounded-xl font-semibold text-sm border-2 transition-all ${
                         form.role === role
-                          ? 'border-brown-400 bg-brown-100 dark:bg-brown-400 text-brown-500 dark:text-cream-100'
-                          : 'border-brown-100 dark:border-brown-400 bg-cream-100 dark:bg-brown-500 text-brown-300 dark:text-cream-300'
+                          ? 'border-cyan-200 bg-slate-100 dark:bg-cyan-500 text-cyan-600 dark:text-slate-100'
+                          : 'border-slate-100 dark:border-cyan-200 bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-200'
                       }`}>
                       {label}
                     </button>
@@ -90,20 +90,20 @@ export default function Auth({ setUser, addToast, theme, toggleTheme }) {
             )}
 
             <button type="submit" disabled={loading}
-              className="w-full mt-2 py-3 bg-brown-400 hover:bg-brown-500 disabled:opacity-60 text-cream-100 font-bold rounded-xl shadow-md transition-all active:scale-95">
+              className="w-full mt-2 py-3 bg-cyan-500 hover:bg-cyan-500 disabled:opacity-60 text-white font-bold rounded-xl shadow-md transition-all active:scale-95">
               {loading ? 'Please wait...' : isLogin ? 'Sign In' : 'Create Account'}
             </button>
           </form>
 
-          <p className="text-center mt-6 text-sm text-brown-300 dark:text-brown-200">
+          <p className="text-center mt-6 text-sm text-slate-500 dark:text-slate-300">
             {isLogin ? "Don't have an account? " : 'Already have an account? '}
-            <button type="button" onClick={() => setIsLogin(!isLogin)} className="text-brown-400 dark:text-warning hover:underline font-bold">
+            <button type="button" onClick={() => setIsLogin(!isLogin)} className="text-slate-500 dark:text-warning hover:underline font-bold">
               {isLogin ? 'Sign up' : 'Sign in'}
             </button>
           </p>
         </div>
 
-        <p className="text-center mt-4 text-xs text-brown-200 dark:text-brown-300">
+        <p className="text-center mt-4 text-xs text-slate-300 dark:text-slate-500">
           Demo: Sign up with any email and password — no verification needed.
         </p>
       </div>

@@ -1,8 +1,8 @@
 const express = require('express');
-const cors    = require('cors');
-const QRCode  = require('qrcode');
+const cors = require('cors');
+const QRCode = require('qrcode');
 
-const app  = express();
+const app = express();
 const PORT = process.env.PORT || 5000;
 
 app.use(cors());
@@ -34,16 +34,16 @@ app.use(express.json());
    ============================================================ */
 
 // ── In-memory store ──────────────────────────────────────────────────────────
-let users    = [];
+let users = [];
 let payments = [
-  { id: 'tx_demo_1', amount: 500,   time: Date.now() - 1000*60*3,  name: 'Rahul Sharma',  status: 'verified',  method: 'UPI' },
-  { id: 'tx_demo_2', amount: 1200,  time: Date.now() - 1000*60*10, name: 'Priya Patel',   status: 'verified',  method: 'Card' },
-  { id: 'tx_demo_3', amount: 250,   time: Date.now() - 1000*60*18, name: 'Arjun Reddy',   status: 'unmatched', method: 'UPI' },
-  { id: 'tx_demo_4', amount: 3500,  time: Date.now() - 1000*60*25, name: 'Meera Nair',    status: 'verified',  method: 'NetBanking' },
-  { id: 'tx_demo_5', amount: 800,   time: Date.now() - 1000*60*40, name: 'Amit Kumar',    status: 'suspicious', method: 'UPI' },
-  { id: 'tx_demo_6', amount: 150,   time: Date.now() - 1000*60*55, name: 'Sneha Desai',   status: 'pending',   method: 'UPI' },
-  { id: 'tx_demo_7', amount: 4500,  time: Date.now() - 1000*60*70, name: 'Vikram Singh',  status: 'verified',  method: 'Card' },
-  { id: 'tx_demo_8', amount: 2100,  time: Date.now() - 1000*60*90, name: 'Ananya Gupta',  status: 'verified',  method: 'UPI' },
+  { id: 'tx_demo_1', amount: 500, time: Date.now() - 1000 * 60 * 3, name: 'Rahul Sharma', status: 'verified', method: 'UPI' },
+  { id: 'tx_demo_2', amount: 1200, time: Date.now() - 1000 * 60 * 10, name: 'Priya Patel', status: 'verified', method: 'Card' },
+  { id: 'tx_demo_3', amount: 250, time: Date.now() - 1000 * 60 * 18, name: 'Arjun Reddy', status: 'unmatched', method: 'UPI' },
+  { id: 'tx_demo_4', amount: 3500, time: Date.now() - 1000 * 60 * 25, name: 'Meera Nair', status: 'verified', method: 'NetBanking' },
+  { id: 'tx_demo_5', amount: 800, time: Date.now() - 1000 * 60 * 40, name: 'Amit Kumar', status: 'suspicious', method: 'UPI' },
+  { id: 'tx_demo_6', amount: 150, time: Date.now() - 1000 * 60 * 55, name: 'Sneha Desai', status: 'pending', method: 'UPI' },
+  { id: 'tx_demo_7', amount: 4500, time: Date.now() - 1000 * 60 * 70, name: 'Vikram Singh', status: 'verified', method: 'Card' },
+  { id: 'tx_demo_8', amount: 2100, time: Date.now() - 1000 * 60 * 90, name: 'Ananya Gupta', status: 'verified', method: 'UPI' },
 ];
 
 const scamKeywords = [
@@ -117,18 +117,18 @@ app.post('/api/generate-qr', async (req, res) => {
   }
 
   try {
-    const safeTxnId  = txnId
+    const safeTxnId = txnId
       ? `TRX_${txnId.replace(/\s+/g, '_').slice(0, 20)}_${Date.now()}`
       : `TRX${Date.now()}`;
-    const proofLink  = `trustpay-verify:${safeTxnId}`;
+    const proofLink = `trustpay-verify:${safeTxnId}`;
     const qrCodeData = await QRCode.toDataURL(proofLink, { width: 256, margin: 2 });
 
     // Register the transaction as "pending" so merchant can verify it
     payments.unshift({
-      id:     safeTxnId,
+      id: safeTxnId,
       amount: Number(amount),
-      time:   Date.now(),
-      name:   name || 'Customer',
+      time: Date.now(),
+      name: name || 'Customer',
       status: 'pending',
       method: 'UPI',
     });
@@ -153,18 +153,18 @@ app.post('/api/scan-qr', (req, res) => {
   if (!qrData || !qrData.startsWith('trustpay-verify:')) {
     return res.json({
       success: false,
-      status:  'suspicious',
+      status: 'suspicious',
       message: 'Invalid QR code. Only TrustPay-issued codes are accepted.',
     });
   }
 
   const txnId = qrData.replace('trustpay-verify:', '').trim();
-  const txn   = payments.find(p => p.id === txnId);
+  const txn = payments.find(p => p.id === txnId);
 
   if (!txn) {
     return res.json({
       success: false,
-      status:  'unmatched',
+      status: 'unmatched',
       message: 'Transaction ID not found in the TrustPay network.',
     });
   }
@@ -184,12 +184,12 @@ app.post('/api/scam-check', (req, res) => {
 
   if (found.length > 0) {
     res.json({
-      result:  'Suspicious',
+      result: 'Suspicious',
       message: `Potential scam detected! Found keywords: ${found.join(', ')}. Do not share any personal information.`,
     });
   } else {
     res.json({
-      result:  'Safe',
+      result: 'Safe',
       message: 'No common scam keywords found. The message appears safe.',
     });
   }
@@ -198,38 +198,38 @@ app.post('/api/scam-check', (req, res) => {
 // ── Analytics ────────────────────────────────────────────────────────────────
 
 app.get('/api/analytics', (req, res) => {
-  const verified   = payments.filter(p => p.status === 'verified').length;
+  const verified = payments.filter(p => p.status === 'verified').length;
   const suspicious = payments.filter(p => p.status === 'suspicious').length;
-  const pending    = payments.filter(p => ['pending', 'unmatched'].includes(p.status)).length;
+  const pending = payments.filter(p => ['pending', 'unmatched'].includes(p.status)).length;
 
   // Realistic pre-injected hourly distribution (represents a typical business day)
   const hourlyData = [
-    { hour: '8 AM',  volume: 12 },
-    { hour: '9 AM',  volume: 34 },
+    { hour: '8 AM', volume: 12 },
+    { hour: '9 AM', volume: 34 },
     { hour: '10 AM', volume: 55 },
     { hour: '11 AM', volume: 72 },
     { hour: '12 PM', volume: 98 },
-    { hour: '1 PM',  volume: 110 },
-    { hour: '2 PM',  volume: 88 },
-    { hour: '3 PM',  volume: 65 },
-    { hour: '4 PM',  volume: 48 },
-    { hour: '5 PM',  volume: 57 },
-    { hour: '6 PM',  volume: 80 },
-    { hour: '7 PM',  volume: 95 },
-    { hour: '8 PM',  volume: 74 },
-    { hour: '9 PM',  volume: 40 },
+    { hour: '1 PM', volume: 110 },
+    { hour: '2 PM', volume: 88 },
+    { hour: '3 PM', volume: 65 },
+    { hour: '4 PM', volume: 48 },
+    { hour: '5 PM', volume: 57 },
+    { hour: '6 PM', volume: 80 },
+    { hour: '7 PM', volume: 95 },
+    { hour: '8 PM', volume: 74 },
+    { hour: '9 PM', volume: 40 },
   ];
 
-  const sorted       = [...payments].sort((a, b) => b.amount - a.amount);
+  const sorted = [...payments].sort((a, b) => b.amount - a.amount);
   const highestPayment = sorted[0] || null;
-  const lowestPayment  = sorted[sorted.length - 1] || null;
+  const lowestPayment = sorted[sorted.length - 1] || null;
 
   res.json({
     metrics: {
-      total:    payments.length + 192,  // adds historical base
+      total: payments.length + 192,  // adds historical base
       verified: verified + 178,
-      pending:  pending  + 10,
-      failed:   suspicious + 4,
+      pending: pending + 10,
+      failed: suspicious + 4,
     },
     hourlyData,
     highestPayment,

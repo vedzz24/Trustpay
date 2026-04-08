@@ -50,7 +50,7 @@ export default function MerchantAnalytics({ addToast }) {
       {/* Header & Controls */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-6 border-b border-white/20 gap-4 sm:gap-0">
         <div>
-          <h2 className="text-2xl font-black text-slate-800 dark:text-white tracking-tight">System <span className="neon-text">Overview</span></h2>
+          <h2 className="text-2xl font-black text-slate-800 dark:text-slate-100 tracking-tight">System <span className="neon-text">Overview</span></h2>
           <p className="text-sm text-cyber-cyan font-mono mt-1 tracking-wider">Metrics trending +23% upward</p>
         </div>
         <button 
@@ -83,7 +83,7 @@ export default function MerchantAnalytics({ addToast }) {
               </div>
             </div>
             <div>
-              <h3 className="text-4xl font-black text-slate-800 dark:text-white tracking-widest">{card.value}</h3>
+              <h3 className="text-4xl font-black text-slate-800 dark:text-slate-100 tracking-widest">{card.value}</h3>
               <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mt-1 opacity-80">{card.label}</p>
             </div>
           </motion.div>
@@ -98,7 +98,7 @@ export default function MerchantAnalytics({ addToast }) {
           
           <div className="flex justify-between items-end mb-8 relative z-10">
             <div>
-              <h3 className="font-black text-xl text-slate-800 dark:text-white flex items-center gap-2 tracking-tight">
+              <h3 className="font-black text-xl text-slate-800 dark:text-slate-100 flex items-center gap-2 tracking-tight">
                 <Activity className="w-6 h-6 text-cyber-purple drop-shadow-[0_0_8px_rgba(107,0,255,0.8)]" />
                 Network Traffic
               </h3>
@@ -151,7 +151,7 @@ export default function MerchantAnalytics({ addToast }) {
         <div className="space-y-8">
           {/* Status Breakdown Segmented Bar */}
           <div className="glass-panel rounded-3xl p-6 sm:p-8 hover:shadow-glow-cyan transition-all duration-500">
-            <h3 className="font-black text-slate-800 dark:text-white tracking-tight mb-6">Execution States</h3>
+            <h3 className="font-black text-slate-800 dark:text-slate-100 tracking-tight mb-6">Execution States</h3>
             
             <div className="h-4 w-full flex rounded-full overflow-hidden mb-6 bg-slate-200 dark:bg-black/50 border border-white/10 shadow-inner">
               {getPercent(metrics.verified) > 0 && <div style={{width: `${getPercent(metrics.verified)}%`}} className="bg-green-500 shadow-[0_0_10px_#10B981] relative"><div className="absolute inset-0 bg-white/20 animate-pulse-glow" /></div>}
@@ -183,7 +183,7 @@ export default function MerchantAnalytics({ addToast }) {
 
           {/* Extremes */}
           <div className="glass-panel rounded-3xl p-6 sm:p-8 space-y-4 hover:shadow-glow-purple transition-all duration-500">
-            <h3 className="font-black text-slate-800 dark:text-white tracking-tight">Outliers Detected</h3>
+            <h3 className="font-black text-slate-800 dark:text-slate-100 tracking-tight">Outliers Detected</h3>
             
             {highestPayment && (
               <div className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/10 hover:border-cyber-cyan transition-colors group">
@@ -193,7 +193,7 @@ export default function MerchantAnalytics({ addToast }) {
                   </div>
                   <div>
                     <p className="text-[10px] font-mono text-slate-500 tracking-wider line-clamp-1">{highestPayment.name || 'ANON_SOURCE'}</p>
-                    <p className="text-sm font-black text-slate-800 dark:text-white">₹{highestPayment.amount}</p>
+                    <p className="text-sm font-black text-slate-800 dark:text-slate-100">₹{highestPayment.amount}</p>
                   </div>
                 </div>
                 <span className="text-[10px] font-bold px-2 py-1 bg-cyber-cyan/10 border border-cyber-cyan/30 text-cyber-cyan rounded">MAX</span>
@@ -208,7 +208,7 @@ export default function MerchantAnalytics({ addToast }) {
                   </div>
                   <div>
                     <p className="text-[10px] font-mono text-slate-500 tracking-wider line-clamp-1">{lowestPayment.name || 'ANON_SOURCE'}</p>
-                    <p className="text-sm font-black text-slate-800 dark:text-white">₹{lowestPayment.amount}</p>
+                    <p className="text-sm font-black text-slate-800 dark:text-slate-100">₹{lowestPayment.amount}</p>
                   </div>
                 </div>
                 <span className="text-[10px] font-bold px-2 py-1 bg-cyber-purple/10 border border-cyber-purple/30 text-cyber-purple rounded">MIN</span>

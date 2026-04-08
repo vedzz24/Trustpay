@@ -56,7 +56,7 @@ export default function Navigation({ theme, toggleTheme }) {
               className={({ isActive }) => cn(
                 "group relative flex items-center justify-center sm:justify-start gap-3 flex-1 sm:flex-none p-3 sm:px-4 sm:py-3 rounded-none sm:rounded-xl text-sm font-medium transition-all duration-300",
                 isActive 
-                  ? "text-slate-900 dark:text-white" 
+                  ? "text-slate-900 dark:text-slate-100" 
                   : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
               )}
             >

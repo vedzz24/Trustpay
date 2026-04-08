@@ -46,15 +46,15 @@ export default function UserMode({ addToast, user }) {
     finally { setChecking(false); }
   };
 
-  const card = "bg-cream-100 dark:bg-brown-500 border border-brown-100 dark:border-brown-400 rounded-2xl shadow-sm";
-  const inputCls = "w-full px-4 py-3 rounded-xl border border-brown-100 dark:border-brown-400 bg-cream-200 dark:bg-brown-600 text-brown-600 dark:text-cream-200 outline-none focus:ring-2 focus:ring-brown-300 dark:focus:ring-brown-200 transition-all placeholder-brown-200 dark:placeholder-brown-300";
-  const labelCls = "block text-sm font-semibold text-brown-400 dark:text-cream-300 mb-1.5";
+  const card = "bg-white dark:bg-slate-800 border border-slate-100 dark:border-cyan-200 rounded-2xl shadow-sm";
+  const inputCls = "w-full px-4 py-3 rounded-xl border border-slate-100 dark:border-cyan-200 bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 outline-none focus:ring-2 focus:ring-slate-500 dark:focus:ring-slate-300 transition-all placeholder-slate-300 dark:placeholder-slate-500";
+  const labelCls = "block text-sm font-semibold text-slate-500 dark:text-slate-200 mb-1.5";
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-8 space-y-6">
       <div>
-        <h1 className="text-2xl font-black text-brown-500 dark:text-cream-200">Payment Proof Engine</h1>
-        <p className="text-brown-300 dark:text-brown-200 text-sm mt-1">Generate a secure QR code and show it to the merchant for instant verification.</p>
+        <h1 className="text-2xl font-black text-cyan-600 dark:text-slate-100">Payment Proof Engine</h1>
+        <p className="text-slate-500 dark:text-slate-300 text-sm mt-1">Generate a secure QR code and show it to the merchant for instant verification.</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -62,10 +62,10 @@ export default function UserMode({ addToast, user }) {
         {/* ── QR Generator ── */}
         <div className={`${card} p-6 flex flex-col`}>
           <div className="flex items-center gap-3 mb-5">
-            <div className="p-2.5 bg-brown-100 dark:bg-brown-400 text-brown-400 dark:text-cream-200 rounded-xl">
+            <div className="p-2.5 bg-slate-100 dark:bg-cyan-500 text-slate-500 dark:text-slate-100 rounded-xl">
               <QrCode className="w-5 h-5" />
             </div>
-            <h2 className="text-lg font-bold text-brown-500 dark:text-cream-200">Generate Payment Proof</h2>
+            <h2 className="text-lg font-bold text-cyan-600 dark:text-slate-100">Generate Payment Proof</h2>
           </div>
 
           <form onSubmit={handleProof} className="space-y-4 flex-1 flex flex-col">
@@ -74,11 +74,11 @@ export default function UserMode({ addToast, user }) {
               <input type="number" required min="1" value={amount} onChange={e => setAmount(e.target.value)} className={cn(inputCls, 'font-semibold text-lg')} placeholder="0" />
             </div>
             <div>
-              <label className={labelCls}>Note <span className="text-brown-200 font-normal">(optional)</span></label>
+              <label className={labelCls}>Note <span className="text-slate-300 font-normal">(optional)</span></label>
               <input type="text" value={note} onChange={e => setNote(e.target.value)} className={inputCls} placeholder="e.g. Grocery payment" />
             </div>
             <button type="submit" disabled={generating}
-              className="mt-auto w-full py-3 bg-brown-400 hover:bg-brown-500 disabled:opacity-60 text-cream-100 font-bold rounded-xl shadow-md active:scale-95 transition-all">
+              className="mt-auto w-full py-3 bg-cyan-500 hover:bg-cyan-500 disabled:opacity-60 text-white font-bold rounded-xl shadow-md active:scale-95 transition-all">
               {generating ? 'Generating...' : '🔐 Generate QR Proof'}
             </button>
           </form>
@@ -86,19 +86,19 @@ export default function UserMode({ addToast, user }) {
           <AnimatePresence>
             {proofData && (
               <motion.div initial={{ opacity:0, height:0 }} animate={{ opacity:1, height:'auto' }} exit={{ opacity:0, height:0 }}
-                className="mt-6 pt-6 border-t border-brown-100 dark:border-brown-400 overflow-hidden">
+                className="mt-6 pt-6 border-t border-slate-100 dark:border-cyan-200 overflow-hidden">
                 <div className="flex flex-col items-center gap-3 text-center">
-                  <p className="text-sm font-semibold text-brown-300 dark:text-brown-200 max-w-xs">Show this QR to the merchant for instant, scam-proof verification.</p>
-                  <div className="p-3 bg-white rounded-2xl border-4 border-brown-300 shadow-lg">
+                  <p className="text-sm font-semibold text-slate-500 dark:text-slate-300 max-w-xs">Show this QR to the merchant for instant, scam-proof verification.</p>
+                  <div className="p-3 bg-white rounded-2xl border-4 border-slate-300 shadow-lg">
                     <img src={proofData.qrCodeData} alt="Payment QR" className="w-40 h-40" />
                   </div>
-                  <p className="text-3xl font-black text-brown-500 dark:text-cream-200">₹{proofData.details.amount}</p>
-                  {note && <p className="text-sm text-brown-300 dark:text-brown-200">{note}</p>}
-                  <div className="w-full bg-cream-200 dark:bg-brown-600 rounded-xl px-4 py-2.5 border border-brown-100 dark:border-brown-400">
-                    <p className="text-[11px] text-brown-300 dark:text-brown-300 mb-0.5 font-semibold uppercase tracking-wide">Proof Code</p>
-                    <p className="text-xs font-mono text-brown-500 dark:text-cream-300 break-all">{proofData.proofLink}</p>
+                  <p className="text-3xl font-black text-cyan-600 dark:text-slate-100">₹{proofData.details.amount}</p>
+                  {note && <p className="text-sm text-slate-500 dark:text-slate-300">{note}</p>}
+                  <div className="w-full bg-slate-50 dark:bg-slate-900 rounded-xl px-4 py-2.5 border border-slate-100 dark:border-cyan-200">
+                    <p className="text-[11px] text-slate-500 dark:text-slate-500 mb-0.5 font-semibold uppercase tracking-wide">Proof Code</p>
+                    <p className="text-xs font-mono text-cyan-600 dark:text-slate-200 break-all">{proofData.proofLink}</p>
                   </div>
-                  <button onClick={() => { setProofData(null); setAmount(''); setNote(''); }} className="text-sm text-brown-400 dark:text-warning hover:underline font-semibold">Generate another</button>
+                  <button onClick={() => { setProofData(null); setAmount(''); setNote(''); }} className="text-sm text-slate-500 dark:text-warning hover:underline font-semibold">Generate another</button>
                 </div>
               </motion.div>
             )}
@@ -108,10 +108,10 @@ export default function UserMode({ addToast, user }) {
         {/* ── Scam Checker ── */}
         <div className={`${card} p-6 flex flex-col`}>
           <div className="flex items-center gap-3 mb-5">
-            <div className="p-2.5 bg-cream-300 dark:bg-brown-400 text-brown-400 dark:text-cream-200 rounded-xl">
+            <div className="p-2.5 bg-slate-100 dark:bg-cyan-500 text-slate-500 dark:text-slate-100 rounded-xl">
               <FileSearch className="w-5 h-5" />
             </div>
-            <h2 className="text-lg font-bold text-brown-500 dark:text-cream-200">Scam Message Checker</h2>
+            <h2 className="text-lg font-bold text-cyan-600 dark:text-slate-100">Scam Message Checker</h2>
           </div>
 
           <form onSubmit={handleScam} className="flex-1 flex flex-col space-y-4">
@@ -120,7 +120,7 @@ export default function UserMode({ addToast, user }) {
               <textarea rows={5} value={scamText} onChange={e => setScamText(e.target.value)} className={cn(inputCls, 'resize-none flex-1 text-sm')} placeholder="Dear customer, your account has been blocked. Send OTP to verify..." />
             </div>
             <button type="submit" disabled={checking}
-              className="w-full py-3 bg-brown-300 hover:bg-brown-400 disabled:opacity-60 text-cream-100 font-bold rounded-xl shadow-md active:scale-95 transition-all">
+              className="w-full py-3 bg-slate-500 hover:bg-cyan-500 disabled:opacity-60 text-white font-bold rounded-xl shadow-md active:scale-95 transition-all">
               {checking ? 'Analyzing...' : '🔍 Check for Scam'}
             </button>
           </form>
@@ -137,7 +137,7 @@ export default function UserMode({ addToast, user }) {
                   : <ShieldAlert className="w-6 h-6 text-danger shrink-0 mt-0.5" />}
                 <div>
                   <p className={cn('font-bold text-sm', scamResult.result === 'Safe' ? 'text-success' : 'text-danger')}>{scamResult.result}</p>
-                  <p className="text-xs text-brown-400 dark:text-brown-200 mt-1 leading-relaxed">{scamResult.message}</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-300 mt-1 leading-relaxed">{scamResult.message}</p>
                 </div>
               </motion.div>
             )}
@@ -147,27 +147,27 @@ export default function UserMode({ addToast, user }) {
 
       {/* ── Timeline ── */}
       <div className={`${card} p-6`}>
-        <h2 className="text-lg font-bold text-brown-500 dark:text-cream-200 mb-5">Recent Transactions</h2>
+        <h2 className="text-lg font-bold text-cyan-600 dark:text-slate-100 mb-5">Recent Transactions</h2>
         {timeline.length === 0
-          ? <p className="text-brown-200 dark:text-brown-400 text-sm text-center py-8">No recent transactions.</p>
+          ? <p className="text-slate-300 dark:text-slate-500 text-sm text-center py-8">No recent transactions.</p>
           : (
             <div className="space-y-3">
               {timeline.map((item, i) => (
                 <motion.div key={item.id} initial={{ opacity:0, y:5 }} animate={{ opacity:1, y:0 }} transition={{ delay: i * .06 }}
-                  className="flex items-center gap-4 p-3.5 bg-cream-200 dark:bg-brown-600 rounded-xl border border-brown-100 dark:border-brown-400">
-                  <div className={cn('w-9 h-9 rounded-full flex items-center justify-center border-2 bg-cream-100 dark:bg-brown-500 shrink-0',
+                  className="flex items-center gap-4 p-3.5 bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-cyan-200">
+                  <div className={cn('w-9 h-9 rounded-full flex items-center justify-center border-2 bg-white dark:bg-slate-800 shrink-0',
                     item.status === 'verified' ? 'border-success' : 'border-warning')}>
                     {item.status === 'verified'
                       ? <CheckCircle2 className="w-4 h-4 text-success" />
                       : <Clock className="w-4 h-4 text-warning" />}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="font-bold text-brown-500 dark:text-cream-200">₹{item.amount}</div>
-                    <div className="text-xs text-brown-300 dark:text-brown-200 truncate">{item.name}</div>
+                    <div className="font-bold text-cyan-600 dark:text-slate-100">₹{item.amount}</div>
+                    <div className="text-xs text-slate-500 dark:text-slate-300 truncate">{item.name}</div>
                   </div>
                   <div className="text-right shrink-0">
                     <div className={cn('text-xs font-bold uppercase', item.status === 'verified' ? 'text-success' : 'text-warning')}>{item.status}</div>
-                    <div className="text-[11px] text-brown-200 dark:text-brown-300 font-mono mt-0.5">{new Date(item.time).toLocaleTimeString()}</div>
+                    <div className="text-[11px] text-slate-300 dark:text-slate-500 font-mono mt-0.5">{new Date(item.time).toLocaleTimeString()}</div>
                   </div>
                 </motion.div>
               ))}

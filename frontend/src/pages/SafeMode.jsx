@@ -121,8 +121,8 @@ export default function SafeMode({ addToast, user }) {
     addToast('Playing voice warning...', 'info');
   };
 
-  const card = 'bg-cream-100 dark:bg-brown-500 border border-brown-100 dark:border-brown-400 rounded-2xl shadow-sm';
-  const inputCls = 'w-full px-4 py-3 rounded-xl border border-brown-100 dark:border-brown-400 bg-cream-200 dark:bg-brown-600 text-brown-600 dark:text-cream-200 outline-none focus:ring-2 focus:ring-brown-300 transition-all placeholder-brown-200 dark:placeholder-brown-300';
+  const card = 'bg-white dark:bg-slate-800 border border-slate-100 dark:border-cyan-200 rounded-2xl shadow-sm';
+  const inputCls = 'w-full px-4 py-3 rounded-xl border border-slate-100 dark:border-cyan-200 bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 outline-none focus:ring-2 focus:ring-slate-500 transition-all placeholder-slate-300 dark:placeholder-slate-500';
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-8 space-y-5">
@@ -139,8 +139,8 @@ export default function SafeMode({ addToast, user }) {
       </div>
 
       <div>
-        <h1 className="text-xl font-black text-brown-500 dark:text-cream-200">Safe Mode</h1>
-        <p className="text-brown-300 dark:text-brown-200 text-sm mt-1">
+        <h1 className="text-xl font-black text-cyan-600 dark:text-slate-100">Safe Mode</h1>
+        <p className="text-slate-500 dark:text-slate-300 text-sm mt-1">
           Payments above ₹{THRESHOLD.toLocaleString()} require family member approval before proceeding.
         </p>
       </div>
@@ -169,8 +169,8 @@ export default function SafeMode({ addToast, user }) {
             className="p-4 rounded-2xl border-2 border-warning bg-amber-50 dark:bg-amber-900/20 flex items-start gap-3">
             <Loader2 className="w-5 h-5 text-warning shrink-0 mt-0.5 animate-spin" />
             <div>
-              <p className="font-bold text-brown-500 dark:text-cream-200 text-sm">Waiting for family approval...</p>
-              <p className="text-xs text-brown-300 dark:text-brown-200 mt-1">
+              <p className="font-bold text-cyan-600 dark:text-slate-100 text-sm">Waiting for family approval...</p>
+              <p className="text-xs text-slate-500 dark:text-slate-300 mt-1">
                 A request for <strong>₹{waitingFor.amount}</strong> has been sent to your family member.
                 Ask them to open <strong>localhost:5173/family</strong> to respond.
               </p>
@@ -183,20 +183,20 @@ export default function SafeMode({ addToast, user }) {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <motion.button whileHover={{ scale:1.02 }} whileTap={{ scale:.97 }}
           onClick={() => addToast('Check Payment feature coming soon', 'info')}
-          className="flex items-center gap-3 justify-center px-4 py-3.5 bg-brown-400 hover:bg-brown-500 text-cream-100 font-bold rounded-xl shadow-sm transition-all text-sm">
+          className="flex items-center gap-3 justify-center px-4 py-3.5 bg-cyan-500 hover:bg-cyan-500 text-white font-bold rounded-xl shadow-sm transition-all text-sm">
           <Search className="w-5 h-5" /> Check Payment
         </motion.button>
 
         <motion.button whileHover={{ scale:1.02 }} whileTap={{ scale:.97 }}
           onClick={() => { setApproval(null); setShowScanModal(true); }}
           disabled={!!waitingFor}
-          className="flex items-center gap-3 justify-center px-4 py-3.5 bg-brown-400 hover:bg-brown-500 disabled:opacity-50 text-cream-100 font-bold rounded-xl shadow-sm transition-all text-sm">
+          className="flex items-center gap-3 justify-center px-4 py-3.5 bg-cyan-500 hover:bg-cyan-500 disabled:opacity-50 text-white font-bold rounded-xl shadow-sm transition-all text-sm">
           <QrCode className="w-5 h-5" /> Scan QR Code
         </motion.button>
 
         <motion.button whileHover={{ scale:1.02 }} whileTap={{ scale:.97 }}
           onClick={() => addToast('Call checker feature coming soon', 'info')}
-          className="flex items-center gap-3 justify-center px-4 py-3.5 bg-brown-400 hover:bg-brown-500 text-cream-100 font-bold rounded-xl shadow-sm transition-all text-sm">
+          className="flex items-center gap-3 justify-center px-4 py-3.5 bg-cyan-500 hover:bg-cyan-500 text-white font-bold rounded-xl shadow-sm transition-all text-sm">
           <Phone className="w-5 h-5" /> Check a Call
         </motion.button>
       </div>
@@ -204,7 +204,7 @@ export default function SafeMode({ addToast, user }) {
       {/* Voice + Family Alert */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <motion.button whileHover={{ scale:1.02 }} whileTap={{ scale:.97 }} onClick={speakWarning}
-          className="flex items-center gap-3 justify-center px-4 py-3.5 bg-warning/80 hover:bg-warning text-brown-600 font-bold rounded-xl shadow-sm text-sm">
+          className="flex items-center gap-3 justify-center px-4 py-3.5 bg-warning/80 hover:bg-warning text-slate-800 font-bold rounded-xl shadow-sm text-sm">
           <Volume2 className="w-5 h-5" /> Hear Voice Warning
         </motion.button>
         <motion.button whileHover={{ scale:1.02 }} whileTap={{ scale:.97 }}
@@ -216,13 +216,13 @@ export default function SafeMode({ addToast, user }) {
 
       {/* Scam Message Checker */}
       <div className={`${card} p-5`}>
-        <h3 className="font-bold text-brown-500 dark:text-cream-200 mb-3">🔍 Check a Suspicious Message</h3>
+        <h3 className="font-bold text-cyan-600 dark:text-slate-100 mb-3">🔍 Check a Suspicious Message</h3>
         <form onSubmit={handleScamCheck} className="space-y-3">
           <textarea rows={3} value={scamText} onChange={e => setScamText(e.target.value)}
             className={cn(inputCls, 'resize-none text-sm')}
             placeholder="Paste SMS or WhatsApp message here..." />
           <button type="submit" disabled={checking}
-            className="w-full py-2.5 bg-brown-300 hover:bg-brown-400 disabled:opacity-60 text-cream-100 font-bold rounded-xl transition-all text-sm">
+            className="w-full py-2.5 bg-slate-500 hover:bg-cyan-500 disabled:opacity-60 text-white font-bold rounded-xl transition-all text-sm">
             {checking ? 'Analyzing...' : 'Check for Scam'}
           </button>
         </form>
@@ -236,7 +236,7 @@ export default function SafeMode({ addToast, user }) {
               {scamResult.result === 'Safe' ? <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" /> : <ShieldAlert className="w-4 h-4 shrink-0 mt-0.5" />}
               <div>
                 <strong>{scamResult.result}</strong>
-                <p className="text-brown-400 dark:text-brown-200 text-xs mt-0.5">{scamResult.message}</p>
+                <p className="text-slate-500 dark:text-slate-300 text-xs mt-0.5">{scamResult.message}</p>
               </div>
             </motion.div>
           )}
@@ -245,8 +245,8 @@ export default function SafeMode({ addToast, user }) {
 
       {/* Tips */}
       <div className={`${card} p-5`}>
-        <h3 className="font-bold text-brown-500 dark:text-cream-200 mb-3">🛡️ Stay Safe</h3>
-        <ul className="space-y-2 text-sm text-brown-400 dark:text-brown-200">
+        <h3 className="font-bold text-cyan-600 dark:text-slate-100 mb-3">🛡️ Stay Safe</h3>
+        <ul className="space-y-2 text-sm text-slate-500 dark:text-slate-300">
           {[
             `Payments above ₹${THRESHOLD.toLocaleString()} automatically notify your family for approval.`,
             'Never share your OTP or PIN with anyone on a call.',
@@ -255,7 +255,7 @@ export default function SafeMode({ addToast, user }) {
             'Official bank messages come from short codes, not personal numbers.',
           ].map((t, i) => (
             <li key={i} className="flex items-start gap-2">
-              <span className="text-brown-300 font-bold mt-0.5">→</span> {t}
+              <span className="text-slate-500 font-bold mt-0.5">→</span> {t}
             </li>
           ))}
         </ul>
@@ -264,22 +264,22 @@ export default function SafeMode({ addToast, user }) {
       {/* ── Scan QR Modal — asks for amount ── */}
       <AnimatePresence>
         {showScanModal && (
-          <div className="fixed inset-0 z-[100] bg-brown-600/70 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-[100] bg-cyan-600/70 backdrop-blur-sm flex items-center justify-center p-4">
             <motion.div initial={{ scale:.92, opacity:0 }} animate={{ scale:1, opacity:1 }} exit={{ scale:.92, opacity:0 }}
-              className="bg-cream-100 dark:bg-brown-500 w-full max-w-sm rounded-2xl shadow-2xl border border-brown-100 dark:border-brown-400 overflow-hidden">
+              className="bg-white dark:bg-slate-800 w-full max-w-sm rounded-2xl shadow-2xl border border-slate-100 dark:border-cyan-200 overflow-hidden">
 
-              <div className="h-1 bg-gradient-to-r from-warning to-brown-400" />
+              <div className="h-1 bg-gradient-to-r from-warning to-cyan-500" />
 
-              <div className="px-6 py-4 border-b border-brown-100 dark:border-brown-400 bg-cream-200 dark:bg-brown-600">
-                <h2 className="font-bold text-brown-500 dark:text-cream-200">Scan QR Code</h2>
-                <p className="text-xs text-brown-300 dark:text-brown-200 mt-0.5">
+              <div className="px-6 py-4 border-b border-slate-100 dark:border-cyan-200 bg-slate-50 dark:bg-slate-900">
+                <h2 className="font-bold text-cyan-600 dark:text-slate-100">Scan QR Code</h2>
+                <p className="text-xs text-slate-500 dark:text-slate-300 mt-0.5">
                   Enter the payment amount before scanning.
                 </p>
               </div>
 
               <form onSubmit={handleScanSubmit} className="p-6 space-y-4">
                 <div>
-                  <label className="block text-sm font-semibold text-brown-400 dark:text-cream-300 mb-1.5">
+                  <label className="block text-sm font-semibold text-slate-500 dark:text-slate-200 mb-1.5">
                     Amount (₹) <span className="text-danger">*</span>
                   </label>
                   <input type="number" min="1" required value={scanAmount} onChange={e => setScanAmount(e.target.value)}
@@ -293,8 +293,8 @@ export default function SafeMode({ addToast, user }) {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-brown-400 dark:text-cream-300 mb-1.5">
-                    Note <span className="text-brown-200 font-normal">(optional)</span>
+                  <label className="block text-sm font-semibold text-slate-500 dark:text-slate-200 mb-1.5">
+                    Note <span className="text-slate-300 font-normal">(optional)</span>
                   </label>
                   <input type="text" value={scanNote} onChange={e => setScanNote(e.target.value)}
                     className={inputCls} placeholder="e.g. Medicine payment" />
@@ -302,11 +302,11 @@ export default function SafeMode({ addToast, user }) {
 
                 <div className="flex gap-3 pt-1">
                   <button type="button" onClick={() => { setShowScanModal(false); setScanAmount(''); setScanNote(''); }}
-                    className="flex-1 py-2.5 bg-cream-300 dark:bg-brown-400 hover:bg-cream-400 dark:hover:bg-brown-300 text-brown-500 dark:text-cream-200 font-semibold rounded-xl transition-colors">
+                    className="flex-1 py-2.5 bg-slate-100 dark:bg-cyan-500 hover:bg-slate-200 dark:hover:bg-slate-500 text-cyan-600 dark:text-slate-100 font-semibold rounded-xl transition-colors">
                     Cancel
                   </button>
                   <button type="submit" disabled={submitting}
-                    className="flex-1 py-2.5 bg-brown-400 hover:bg-brown-500 disabled:opacity-60 text-cream-100 font-bold rounded-xl flex items-center justify-center gap-2 transition-all active:scale-95">
+                    className="flex-1 py-2.5 bg-cyan-500 hover:bg-cyan-500 disabled:opacity-60 text-white font-bold rounded-xl flex items-center justify-center gap-2 transition-all active:scale-95">
                     {submitting ? <><Loader2 className="w-4 h-4 animate-spin" /> Sending...</> : 'Proceed'}
                   </button>
                 </div>

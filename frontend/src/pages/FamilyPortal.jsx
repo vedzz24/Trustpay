@@ -66,14 +66,14 @@ export default function FamilyPortal() {
   const reset = () => { setResult(null); setRequest(null); };
 
   return (
-    <div className="min-h-screen bg-cream-200 dark:bg-brown-600 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center p-4">
       <div className="w-full max-w-sm space-y-4">
 
         {/* Header */}
         <div className="text-center mb-6">
-          <div className="w-14 h-14 rounded-2xl bg-brown-400 flex items-center justify-center text-cream-100 font-black text-2xl shadow-lg mx-auto mb-3">T</div>
-          <h1 className="text-xl font-black text-brown-500 dark:text-cream-200">TrustPay Family Portal</h1>
-          <p className="text-sm text-brown-300 dark:text-brown-200 mt-1">
+          <div className="w-14 h-14 rounded-2xl bg-cyan-500 flex items-center justify-center text-white font-black text-2xl shadow-lg mx-auto mb-3">T</div>
+          <h1 className="text-xl font-black text-cyan-600 dark:text-slate-100">TrustPay Family Portal</h1>
+          <p className="text-sm text-slate-500 dark:text-slate-300 mt-1">
             You are the guardian for this account. Approve or reject payments made by your family member.
           </p>
         </div>
@@ -100,12 +100,12 @@ export default function FamilyPortal() {
         </AnimatePresence>
 
         {/* Main Card */}
-        <div className="bg-cream-100 dark:bg-brown-500 border border-brown-100 dark:border-brown-400 rounded-2xl shadow-sm overflow-hidden">
+        <div className="bg-white dark:bg-slate-800 border border-slate-100 dark:border-cyan-200 rounded-2xl shadow-sm overflow-hidden">
 
           {loading ? (
             <div className="flex flex-col items-center justify-center py-16 gap-3">
-              <Loader2 className="w-8 h-8 text-brown-300 animate-spin" />
-              <p className="text-sm text-brown-300 dark:text-brown-200 font-medium">Checking for requests...</p>
+              <Loader2 className="w-8 h-8 text-slate-500 animate-spin" />
+              <p className="text-sm text-slate-500 dark:text-slate-300 font-medium">Checking for requests...</p>
             </div>
           ) : request ? (
             <>
@@ -117,32 +117,32 @@ export default function FamilyPortal() {
                     <ShieldAlert className="w-6 h-6 text-warning" />
                   </div>
                   <div>
-                    <h2 className="font-black text-brown-500 dark:text-cream-200">Payment Approval Needed</h2>
-                    <p className="text-xs text-brown-300 dark:text-brown-200 mt-0.5">
+                    <h2 className="font-black text-cyan-600 dark:text-slate-100">Payment Approval Needed</h2>
+                    <p className="text-xs text-slate-500 dark:text-slate-300 mt-0.5">
                       Your family member is trying to make a large payment
                     </p>
                   </div>
                 </div>
 
                 {/* Request Details */}
-                <div className="bg-cream-200 dark:bg-brown-600 rounded-xl p-4 border border-brown-100 dark:border-brown-400 space-y-2">
+                <div className="bg-slate-50 dark:bg-slate-900 rounded-xl p-4 border border-slate-100 dark:border-cyan-200 space-y-2">
                   <div className="flex justify-between items-center">
-                    <span className="text-xs text-brown-300 dark:text-brown-200 font-semibold uppercase tracking-wide">From</span>
-                    <span className="text-sm font-bold text-brown-500 dark:text-cream-200">{request.elderlyName}</span>
+                    <span className="text-xs text-slate-500 dark:text-slate-300 font-semibold uppercase tracking-wide">From</span>
+                    <span className="text-sm font-bold text-cyan-600 dark:text-slate-100">{request.elderlyName}</span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-xs text-brown-300 dark:text-brown-200 font-semibold uppercase tracking-wide">Amount</span>
+                    <span className="text-xs text-slate-500 dark:text-slate-300 font-semibold uppercase tracking-wide">Amount</span>
                     <span className="text-2xl font-black text-danger">₹{request.amount}</span>
                   </div>
                   {request.note && (
                     <div className="flex justify-between items-center">
-                      <span className="text-xs text-brown-300 dark:text-brown-200 font-semibold uppercase tracking-wide">Note</span>
-                      <span className="text-sm text-brown-400 dark:text-brown-200">{request.note}</span>
+                      <span className="text-xs text-slate-500 dark:text-slate-300 font-semibold uppercase tracking-wide">Note</span>
+                      <span className="text-sm text-slate-500 dark:text-slate-300">{request.note}</span>
                     </div>
                   )}
                   <div className="flex justify-between items-center">
-                    <span className="text-xs text-brown-300 dark:text-brown-200 font-semibold uppercase tracking-wide">Time</span>
-                    <span className="text-xs font-mono text-brown-300 dark:text-brown-200">
+                    <span className="text-xs text-slate-500 dark:text-slate-300 font-semibold uppercase tracking-wide">Time</span>
+                    <span className="text-xs font-mono text-slate-500 dark:text-slate-300">
                       {new Date(request.time).toLocaleTimeString('en-IN')}
                     </span>
                   </div>
@@ -170,21 +170,21 @@ export default function FamilyPortal() {
           ) : (
             // No pending request
             <div className="flex flex-col items-center justify-center py-16 gap-3">
-              <div className="w-12 h-12 rounded-full bg-cream-300 dark:bg-brown-400 flex items-center justify-center">
-                <CheckCircle2 className="w-6 h-6 text-brown-300 dark:text-brown-200" />
+              <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-cyan-500 flex items-center justify-center">
+                <CheckCircle2 className="w-6 h-6 text-slate-500 dark:text-slate-300" />
               </div>
-              <p className="text-sm font-semibold text-brown-400 dark:text-brown-200">No pending requests</p>
-              <p className="text-xs text-brown-300 dark:text-brown-300 text-center max-w-[200px]">
+              <p className="text-sm font-semibold text-slate-500 dark:text-slate-300">No pending requests</p>
+              <p className="text-xs text-slate-500 dark:text-slate-500 text-center max-w-[200px]">
                 This page will automatically update when your family member needs approval.
               </p>
-              <button onClick={checkPending} className="flex items-center gap-1.5 text-xs text-brown-300 dark:text-brown-200 hover:text-brown-400 mt-1 font-medium">
+              <button onClick={checkPending} className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-300 hover:text-slate-500 mt-1 font-medium">
                 <RefreshCw className="w-3.5 h-3.5" /> Refresh now
               </button>
             </div>
           )}
         </div>
 
-        <p className="text-center text-xs text-brown-200 dark:text-brown-400">
+        <p className="text-center text-xs text-slate-300 dark:text-slate-500">
           This page auto-refreshes every 3 seconds. Keep it open on your phone.
         </p>
       </div>

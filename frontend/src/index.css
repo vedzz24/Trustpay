@@ -7,12 +7,12 @@
 
   /* ── Light theme: warm cream ── */
   body {
-    @apply bg-cream-200 text-brown-600 font-sans antialiased min-h-screen;
+    @apply bg-slate-50 text-slate-800 font-sans antialiased min-h-screen;
   }
 
-  /* ── Dark theme: deep brown ── */
+  /* ── Dark theme: warm cyan/slate ── */
   .dark body {
-    @apply bg-brown-600 text-cream-200;
+    @apply bg-slate-900 text-slate-100;
   }
 }
 
