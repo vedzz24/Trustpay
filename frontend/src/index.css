@@ -1,0 +1,24 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html { scroll-behavior: smooth; }
+
+  /* ── Light theme: warm cream ── */
+  body {
+    @apply bg-cream-200 text-brown-600 font-sans antialiased min-h-screen;
+  }
+
+  /* ── Dark theme: deep brown ── */
+  .dark body {
+    @apply bg-brown-600 text-cream-200;
+  }
+}
+
+/* Smooth theme transitions */
+*, *::before, *::after {
+  transition-property: background-color, border-color, color, fill, stroke;
+  transition-duration: 200ms;
+  transition-timing-function: ease;
+}
