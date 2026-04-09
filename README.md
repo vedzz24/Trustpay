@@ -1,5 +1,8 @@
-# TrustPay — India's Payment Trust Layer
+<div align="center">
+  <img src="logo.png" alt="TrustPay Logo" height="150" />
+</div>
 
+# TrustPay — India's Payment Trust Layer
 A production-ready Indian fintech platform where users generate cryptographic QR payment proofs and merchants verify them instantly — eliminating fake payment scams.
 
 ---

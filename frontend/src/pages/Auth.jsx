@@ -90,9 +90,26 @@ export default function Auth({ setUser, addToast, theme, toggleTheme }) {
             <h2 className="text-3xl font-black bg-clip-text text-transparent bg-gradient-to-r from-primary-600 to-accent-600 dark:from-primary-400 dark:to-accent-400">
               {isLogin ? 'Welcome Back' : 'Create Account'}
             </h2>
-            <p className="text-sm font-medium text-slate-500 dark:text-slate-400 mt-2">
-              {isLogin ? 'Enter your details to access your dashboard' : 'Join the trusted payment network today'}
+            <p className="text-sm font-medium text-slate-500 dark:text-slate-400 mt-2 mb-6">
+              {isLogin ? 'Select your portal to securely access the dashboard.' : 'Join the trusted payment network today.'}
             </p>
+
+            {/* Portal Toggle Switcher */}
+            <div className="flex bg-slate-100 dark:bg-slate-800 p-1.5 rounded-xl border border-slate-200 dark:border-slate-700/50 shadow-inner">
+              <button 
+                type="button" 
+                onClick={() => { set('role', 'user'); if(isLogin) { set('email', 'keshavdharla@gmail.com'); set('password', 'password123'); } }} 
+                className={cn("flex-1 py-2.5 text-sm font-black tracking-wide rounded-lg transition-all", form.role === 'user' ? "bg-white dark:bg-slate-900 shadow-md text-primary-600 dark:text-primary-400" : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300")}>
+                Customer Portal
+              </button>
+              <button 
+                type="button" 
+                onClick={() => { set('role', 'merchant'); if(isLogin) { set('email', 'merchant@trustpay.tech'); set('password', 'merchant123'); } }} 
+                className={cn("flex-1 py-2.5 text-sm font-black tracking-wide rounded-lg transition-all", form.role === 'merchant' ? "bg-white dark:bg-slate-900 shadow-md text-accent-600 dark:text-accent-400" : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300")}>
+                Merchant Portal
+              </button>
+            </div>
+            {isLogin && <p className="text-[10px] uppercase font-bold tracking-widest text-slate-400 mt-3 flex items-center justify-center gap-1.5"><Shield className="w-3 h-3" /> Auto-fills credentials</p>}
           </motion.div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -116,23 +133,7 @@ export default function Auth({ setUser, addToast, theme, toggleTheme }) {
             </motion.div>
 
             <AnimatePresence mode="popLayout">
-              {!isLogin && (
-                <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="pt-2">
-                  <label className={labelCls}>I am a...</label>
-                  <div className="grid grid-cols-2 gap-3">
-                    {[['user', '👤 Customer'], ['merchant', '🏪 Merchant']].map(([role, label]) => (
-                      <button key={role} type="button" onClick={() => set('role', role)}
-                        className={cn('py-3 rounded-xl font-bold text-sm transition-all shadow-sm',
-                          form.role === role
-                            ? 'bg-primary-500 text-white ring-2 ring-primary-500/30 ring-offset-2 dark:ring-offset-slate-900 border-transparent shadow-primary-500/30'
-                            : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'
-                        )}>
-                        {label}
-                      </button>
-                    ))}
-                  </div>
-                </motion.div>
-              )}
+               {/* Role toggle was moved to the top. This block is clean. */}
             </AnimatePresence>
 
             <motion.button variants={fadeIn} type="submit" disabled={loading}

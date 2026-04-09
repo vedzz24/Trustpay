@@ -8,6 +8,11 @@ import UserMode     from './pages/UserMode';
 import SafeMode     from './pages/SafeMode';
 import Analytics    from './pages/Analytics';
 import FamilyPortal from './pages/FamilyPortal';
+import Blog         from './pages/Blog';
+import Footer       from './components/Footer';
+import Privacy      from './pages/Privacy';
+import Terms        from './pages/Terms';
+import HelpCenter   from './pages/HelpCenter';
 
 export default function App() {
   const [toasts, setToasts] = useState([]);
@@ -70,6 +75,10 @@ export default function App() {
                   <Navbar user={user} logout={logout} theme={theme} toggleTheme={toggleTheme} />
                   <main className="flex-1 pt-16 pb-16 md:pb-0">
                     <Routes>
+                      <Route path="/blog"    element={<Blog />} />
+                      <Route path="/privacy" element={<Privacy />} />
+                      <Route path="/terms"   element={<Terms />} />
+                      <Route path="/help"    element={<HelpCenter />} />
                       {user.role === 'merchant' ? (
                         <>
                           <Route path="/"          element={<MerchantMode addToast={addToast} />} />
@@ -85,6 +94,7 @@ export default function App() {
                       )}
                     </Routes>
                   </main>
+                  <Footer />
                 </>
               )
             }

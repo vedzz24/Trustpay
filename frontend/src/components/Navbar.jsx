@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, BarChart3, Shield, FileText, LogOut, Sun, Moon, Menu, X, ShieldCheck } from 'lucide-react';
+import { LayoutDashboard, BarChart3, Shield, FileText, LogOut, Sun, Moon, Menu, X, ShieldCheck, BookOpen } from 'lucide-react';
 import { useState } from 'react';
 import { cn } from '../utils/cn';
 
@@ -16,6 +16,7 @@ export default function Navbar({ user, logout, theme, toggleTheme }) {
     ...(!isMerchant ? [
       { to: '/safe',    label: 'Safe Mode',  Icon: Shield },
     ] : []),
+    { to: '/blog',       label: 'Blog',       Icon: BookOpen }
   ];
 
   const baseLink = 'relative flex items-center gap-2 text-sm font-semibold px-2 py-1.5 rounded-lg transition-all overflow-hidden group';
