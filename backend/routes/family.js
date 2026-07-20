@@ -1,5 +1,6 @@
 const router      = require('express').Router();
 const FamilyAlert = require('../models/FamilyAlert');
+const { broadcast } = require('../utils/sse');
 
 // POST /api/family/request — elderly user submits a payment needing approval
 router.post('/request', async (req, res) => {
@@ -17,6 +18,8 @@ router.post('/request', async (req, res) => {
       status:      'pending',
       time:        Date.now(),
     });
+
+    broadcast('family_alert_created', alert);
 
     console.log(`📩 Family approval needed: ₹${amount} by ${elderlyName}`);
     res.json({ success: true, requestId: alert._id.toString() });
@@ -55,6 +58,9 @@ router.post('/approve', async (req, res) => {
     if (!alert) return res.status(404).json({ success: false });
     alert.status = 'approved';
     await alert.save();
+
+    broadcast('family_alert_updated', alert);
+
     console.log(`✅ Family approved ₹${alert.amount}`);
     res.json({ success: true });
   } catch (err) {
@@ -69,6 +75,9 @@ router.post('/reject', async (req, res) => {
     if (!alert) return res.status(404).json({ success: false });
     alert.status = 'rejected';
     await alert.save();
+
+    broadcast('family_alert_updated', alert);
+
     console.log(`❌ Family rejected ₹${alert.amount}`);
     res.json({ success: true });
   } catch (err) {

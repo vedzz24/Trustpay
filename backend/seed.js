@@ -1,5 +1,13 @@
 const mongoose = require('mongoose');
 const Payment  = require('./models/Payment');
+const crypto   = require('crypto');
+
+function calculateTxnHash(txnId, amount, name, time) {
+  const secret = process.env.TRUSTPAY_SECRET || 'trustpay_super_secure_key_987';
+  return crypto.createHmac('sha256', secret)
+               .update(`${txnId}|${amount}|${name}|${time}`)
+               .digest('hex');
+}
 
 /**
  * Seeds the MongoDB database with demo payments so the dashboard
@@ -14,21 +22,39 @@ async function seedDatabase() {
   }
 
   const now = Date.now();
+  
+  const createDemoPayment = (txnId, amount, name, status, method, offsetMinutes) => {
+    const time = now - offsetMinutes * 60000;
+    const signature = calculateTxnHash(txnId, amount, name, time);
+    const payload = Buffer.from(JSON.stringify({ txnId, amount, name, time })).toString('base64');
+    const proofLink = `trustpay-verify:${payload}.${signature}`;
+    return {
+      txnId,
+      amount,
+      name,
+      status,
+      method,
+      proofLink,
+      hash: signature,
+      time
+    };
+  };
+
   const demo = [
-    { txnId: 'DEMO_001', amount: 500,   name: 'Rahul Sharma',  status: 'verified',   method: 'UPI',        proofLink: 'trustpay-verify:DEMO_001', time: now - 3 * 60000 },
-    { txnId: 'DEMO_002', amount: 1200,  name: 'Priya Patel',   status: 'verified',   method: 'Card',       proofLink: 'trustpay-verify:DEMO_002', time: now - 10 * 60000 },
-    { txnId: 'DEMO_003', amount: 250,   name: 'Arjun Reddy',   status: 'unmatched',  method: 'UPI',        proofLink: 'trustpay-verify:DEMO_003', time: now - 18 * 60000 },
-    { txnId: 'DEMO_004', amount: 3500,  name: 'Meera Nair',    status: 'verified',   method: 'NetBanking', proofLink: 'trustpay-verify:DEMO_004', time: now - 25 * 60000 },
-    { txnId: 'DEMO_005', amount: 800,   name: 'Amit Kumar',    status: 'suspicious', method: 'UPI',        proofLink: 'trustpay-verify:DEMO_005', time: now - 40 * 60000 },
-    { txnId: 'DEMO_006', amount: 150,   name: 'Sneha Desai',   status: 'pending',    method: 'UPI',        proofLink: 'trustpay-verify:DEMO_006', time: now - 55 * 60000 },
-    { txnId: 'DEMO_007', amount: 4500,  name: 'Vikram Singh',  status: 'verified',   method: 'Card',       proofLink: 'trustpay-verify:DEMO_007', time: now - 70 * 60000 },
-    { txnId: 'DEMO_008', amount: 2100,  name: 'Ananya Gupta',  status: 'verified',   method: 'UPI',        proofLink: 'trustpay-verify:DEMO_008', time: now - 90 * 60000 },
-    { txnId: 'DEMO_009', amount: 650,   name: 'Ravi Verma',    status: 'verified',   method: 'UPI',        proofLink: 'trustpay-verify:DEMO_009', time: now - 110 * 60000 },
-    { txnId: 'DEMO_010', amount: 9800,  name: 'Kavya Iyer',    status: 'verified',   method: 'Card',       proofLink: 'trustpay-verify:DEMO_010', time: now - 130 * 60000 },
+    createDemoPayment('DEMO_001', 500,   'Rahul Sharma',  'verified',   'UPI', 3),
+    createDemoPayment('DEMO_002', 1200,  'Priya Patel',   'verified',   'UPI', 10),
+    createDemoPayment('DEMO_003', 250,   'Arjun Reddy',   'pending',    'UPI', 18),
+    createDemoPayment('DEMO_004', 3500,  'Meera Nair',    'verified',   'UPI', 25),
+    createDemoPayment('DEMO_005', 800,   'Amit Kumar',    'suspicious', 'UPI', 40),
+    createDemoPayment('DEMO_006', 150,   'Sneha Desai',   'pending',    'UPI', 55),
+    createDemoPayment('DEMO_007', 4500,  'Vikram Singh',  'verified',   'UPI', 70),
+    createDemoPayment('DEMO_008', 2100,  'Ananya Gupta',  'verified',   'UPI', 90),
+    createDemoPayment('DEMO_009', 650,   'Ravi Verma',    'verified',   'UPI', 110),
+    createDemoPayment('DEMO_010', 9800,  'Kavya Iyer',    'verified',   'UPI', 130),
   ];
 
   await Payment.insertMany(demo);
-  console.log(`🌱 Seeded ${demo.length} demo payments into MongoDB.`);
+  console.log(`🌱 Seeded ${demo.length} demo payments with cryptographic signatures into MongoDB.`);
 }
 
 module.exports = seedDatabase;

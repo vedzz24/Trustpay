@@ -12,6 +12,9 @@ const PaymentSchema = new mongoose.Schema({
     default: 'pending',
   },
   proofLink: { type: String },  // e.g. trustpay-verify:TRX...
+  hash:      { type: String },  // Cryptographic integrity signature
+  screenshotAnalyzed: { type: Boolean, default: false },
+  screenshotReport:   { type: mongoose.Schema.Types.Mixed },
   time:      { type: Number, default: () => Date.now() }, // Unix ms timestamp
 }, { timestamps: true });
 

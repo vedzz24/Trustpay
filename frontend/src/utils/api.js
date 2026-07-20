@@ -20,6 +20,11 @@ export const generateProof  = (amount, note, name) => post('/payments/generate-q
 export const scanQR         = (qrData)           => post('/payments/scan-qr',   { qrData });
 export const matchPayment   = (amount, time)     => post('/payments/match',      { amount, time });
 export const checkScam      = (text)             => post('/payments/scam-check', { text });
+export const fetchOtpAlerts = ()                 => get('/payments/otp-alerts');
+export const logOtpAlert    = (sender, message, riskLevel, detectedKeywords, actionTaken) =>
+  post('/payments/log-otp-alert', { sender, message, riskLevel, detectedKeywords, actionTaken });
+export const analyzeScreenshot = (imageName, simulatedText) =>
+  post('/payments/analyze-screenshot', { imageName, simulatedText });
 
 // ── Analytics ─────────────────────────────────────────────────────────────────
 export const fetchAnalytics = () => get('/analytics');

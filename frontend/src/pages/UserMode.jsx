@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { QrCode, FileSearch, ShieldCheck, ShieldAlert, Clock, CheckCircle2, AlertCircle, ArrowRight } from 'lucide-react';
+import { QrCode, FileSearch, ShieldCheck, ShieldAlert, Clock, CheckCircle2, AlertCircle, ArrowRight, Lock } from 'lucide-react';
 import { generateProof, checkScam, fetchPayments } from '../utils/api';
 import { cn } from '../utils/cn';
 
@@ -109,29 +109,57 @@ export default function UserMode({ addToast, user }) {
               {proofData && (
                 <motion.div initial={{ opacity:0, height:0 }} animate={{ opacity:1, height:'auto' }} exit={{ opacity:0, height:0 }}
                   className="mt-8 pt-8 border-t border-slate-200/60 dark:border-slate-700/50 overflow-hidden">
-                  <div className="flex flex-col sm:flex-row items-center gap-6 bg-slate-50/50 dark:bg-slate-900/30 p-6 rounded-3xl border border-slate-200/50 dark:border-slate-800/50">
-                    <div className="p-3 bg-white rounded-2xl shadow-sm border border-slate-100 shrink-0">
-                      <img src={proofData.qrCodeData} alt="Payment QR" className="w-32 h-32 mix-blend-multiply" />
+                  <div className="flex flex-col md:flex-row items-center md:items-start gap-8 bg-slate-50/50 dark:bg-slate-900/35 p-6 lg:p-8 rounded-[2rem] border border-slate-200/60 dark:border-slate-800/65 shadow-inner">
+                    <div className="p-4 bg-white rounded-3xl shadow-md border border-slate-150 shrink-0 flex flex-col items-center gap-3">
+                      <img src={proofData.qrCodeData} alt="Payment QR" className="w-40 h-40 mix-blend-multiply" />
+                      <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 bg-slate-100 px-3 py-1 rounded-full border border-slate-200">
+                        Scan QR to Verify
+                      </span>
                     </div>
                     
-                    <div className="flex-1 space-y-3 w-full">
-                      <div>
-                        <p className="text-3xl font-black text-slate-800 dark:text-white">₹{proofData.details.amount.toLocaleString()}</p>
-                        {note && <p className="text-sm font-medium text-slate-500 mt-0.5">{note}</p>}
+                    <div className="flex-1 space-y-4 w-full">
+                      <div className="flex items-center justify-between border-b border-slate-200/60 dark:border-slate-800/60 pb-3">
+                        <div>
+                          <p className="text-3xl font-black text-slate-800 dark:text-white">₹{proofData.details.amount.toLocaleString()}</p>
+                          {note && <p className="text-xs font-semibold text-slate-400 dark:text-slate-500 mt-0.5">{note}</p>}
+                        </div>
+                        <div className="text-right">
+                          <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-black bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
+                            <ShieldCheck className="w-3.5 h-3.5" /> SIGNED
+                          </span>
+                        </div>
                       </div>
 
-                      <div className="bg-white/50 dark:bg-slate-950/50 rounded-xl p-3 border border-slate-200 dark:border-slate-800">
-                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1 flex items-center justify-between">
-                          Signature <CheckCircle2 className="w-3 h-3 text-cyan-500" />
-                        </p>
-                        <p className="text-xs font-mono text-slate-600 dark:text-slate-300 break-all">
-                          {proofData.proofLink}
-                        </p>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                        <div className="bg-white/40 dark:bg-slate-900/20 p-3 rounded-xl border border-slate-200/40 dark:border-slate-800/40">
+                          <p className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1">Transaction ID</p>
+                          <p className="font-mono font-bold text-slate-700 dark:text-slate-350 truncate">{proofData.details.txnId}</p>
+                        </div>
+                        <div className="bg-white/40 dark:bg-slate-900/20 p-3 rounded-xl border border-slate-200/40 dark:border-slate-800/40">
+                          <p className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1">Timestamp</p>
+                          <p className="font-bold text-slate-700 dark:text-slate-350">
+                            {new Date(proofData.details.time).toLocaleTimeString([], { hour: '2-digit', minute:'2-digit', second:'2-digit' })}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="bg-slate-900 dark:bg-slate-950 rounded-2xl p-4 border border-slate-850 font-mono text-[11px] leading-relaxed shadow-inner">
+                        <div className="flex items-center justify-between border-b border-slate-850 pb-2 mb-2">
+                          <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 flex items-center gap-1">
+                            <Lock className="w-3 h-3 text-cyan-400" /> HMAC-SHA256 Signature
+                          </span>
+                          <span className="text-emerald-500 font-bold">Verified Integrity</span>
+                        </div>
+                        <p className="text-cyan-400 break-all mb-1 font-semibold">{proofData.details.hash}</p>
+                        <div className="text-[10px] text-slate-500 mt-2 pt-2 border-t border-slate-850">
+                          <span className="text-slate-400 font-bold">Raw Verification Token:</span>
+                          <p className="text-slate-450 break-all select-all mt-0.5">{proofData.proofLink}</p>
+                        </div>
                       </div>
                       
                       <button onClick={() => { setProofData(null); setAmount(''); setNote(''); }} 
-                        className="text-xs font-bold text-slate-400 hover:text-slate-800 dark:hover:text-white transition-colors underline decoration-slate-300 dark:decoration-slate-700 underline-offset-4">
-                        Dismiss
+                        className="text-xs font-bold text-slate-400 hover:text-primary-500 transition-colors underline decoration-slate-300 dark:decoration-slate-700 hover:decoration-primary-500 underline-offset-4">
+                        Clear & Reset
                       </button>
                     </div>
                   </div>

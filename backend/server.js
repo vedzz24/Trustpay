@@ -9,6 +9,7 @@ const authRoutes     = require('./routes/auth');
 const paymentRoutes  = require('./routes/payments');
 const analyticsRoutes= require('./routes/analytics');
 const familyRoutes   = require('./routes/family');
+const { sseHandler } = require('./utils/sse');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -39,6 +40,7 @@ app.use('/api/auth',      authRoutes);
 app.use('/api/payments',  paymentRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/family',    familyRoutes);
+app.get('/api/stream',    sseHandler);
 
 // ── Health check ──────────────────────────────────────────────────────────────
 app.get('/', (req, res) => {

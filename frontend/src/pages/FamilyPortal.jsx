@@ -16,11 +16,42 @@ export default function FamilyPortal() {
   const [result, setResult]     = useState(null);   // 'approved' | 'rejected'
   const [acting, setActing]     = useState(false);  // approve/reject in progress
 
-  // Poll every 3 seconds for a pending request
+  // Connect to real-time stream with fallback polling
   useEffect(() => {
     checkPending(); // immediate check
-    const interval = setInterval(checkPending, 3000);
-    return () => clearInterval(interval);
+
+    const eventSource = new EventSource('http://localhost:5000/api/stream');
+
+    eventSource.onmessage = (event) => {
+      try {
+        const { type, data } = JSON.parse(event.data);
+        if (type === 'family_alert_created') {
+          setRequest(data);
+          setResult(null); // Clear any previous resolution banners
+        } else if (type === 'family_alert_updated') {
+          setRequest(prev => {
+            if (prev && prev._id === data._id) {
+              setResult(data.status);
+              return null; // request resolved
+            }
+            return prev;
+          });
+        }
+      } catch (err) {
+        console.error('Error parsing SSE event in FamilyPortal:', err);
+      }
+    };
+
+    eventSource.onerror = () => {
+      console.warn('FamilyPortal SSE connection failed. Polling fallback active.');
+    };
+
+    const interval = setInterval(checkPending, 6000);
+
+    return () => {
+      eventSource.close();
+      clearInterval(interval);
+    };
   }, []);
 
   const checkPending = async () => {
