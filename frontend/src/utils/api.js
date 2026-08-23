@@ -11,8 +11,11 @@ const get = (endpoint) =>
   fetch(`${API_BASE}${endpoint}`).then(r => r.json());
 
 // ── Auth ──────────────────────────────────────────────────────────────────────
-export const login  = (email, password)             => post('/auth/login',  { email, password });
-export const signup = (name, email, password, role) => post('/auth/signup', { name, email, password, role });
+export const login  = (email, password)                           => post('/auth/login',  { email, password });
+export const signup = (name, email, password, role, phoneNumber) => post('/auth/signup', { name, email, password, role, phoneNumber });
+export const sendOtp = (phoneNumber)                              => post('/auth/send-otp', { phoneNumber });
+export const verifyOtp = (phoneNumber, otp, role, name)            => post('/auth/verify-otp', { phoneNumber, otp, role, name });
+export const googleLogin = (email, name, role)                    => post('/auth/google', { email, name, role });
 
 // ── Payments ──────────────────────────────────────────────────────────────────
 export const fetchPayments  = ()                 => get('/payments');
@@ -23,8 +26,8 @@ export const checkScam      = (text)             => post('/payments/scam-check',
 export const fetchOtpAlerts = ()                 => get('/payments/otp-alerts');
 export const logOtpAlert    = (sender, message, riskLevel, detectedKeywords, actionTaken) =>
   post('/payments/log-otp-alert', { sender, message, riskLevel, detectedKeywords, actionTaken });
-export const analyzeScreenshot = (imageName, simulatedText) =>
-  post('/payments/analyze-screenshot', { imageName, simulatedText });
+export const analyzeScreenshot = (imageName, simulatedText, imageData) =>
+  post('/payments/analyze-screenshot', { imageName, simulatedText, imageData });
 
 // ── Analytics ─────────────────────────────────────────────────────────────────
 export const fetchAnalytics = () => get('/analytics');

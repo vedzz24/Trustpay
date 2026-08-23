@@ -1,157 +1,478 @@
-import { useState } from 'react';
-import { Sun, Moon, Shield, Sparkles } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { login, signup } from '../utils/api';
-import { cn } from '../utils/cn';
+import { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
+import { ArrowRight, Check, ChevronDown, Fingerprint, LockKeyhole, Menu, Play, ShieldCheck, Sparkles, Sun, Moon, UserRound, X, Zap } from 'lucide-react';
+import { login, signup, sendOtp, verifyOtp, googleLogin } from '../utils/api';
+
+const HERO_VIDEO = 'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260823_050407_500d0339-ab28-41c1-9688-132a74a3b5aa.mp4';
+const ABOUT_VIDEO = 'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260823_063501_2e2c8971-de1e-473a-8611-a0c9ae7ee186.mp4';
+
+const reveal = { 
+  initial: { opacity: 0, y: 30 }, 
+  whileInView: { opacity: 1, y: 0 }, 
+  viewport: { once: true, margin: '-80px' }, 
+  transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] } 
+};
+
+const GoogleIcon = () => (
+  <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5">
+    <path fill="#4285F4" d="M22.6 12.3c0-.8-.1-1.5-.2-2.3H12v4.3h5.9a5.1 5.1 0 0 1-2.2 3.3v2.8h3.6c2.1-2 3.3-4.8 3.3-8.1Z"/>
+    <path fill="#34A853" d="M12 23c3 0 5.5-1 7.3-2.7l-3.6-2.7a6.6 6.6 0 0 1-9.9-3.5H2.2v2.8A11 11 0 0 0 12 23Z"/>
+    <path fill="#FBBC05" d="M5.8 14.1a6.6 6.6 0 0 1 0-4.2V7.1H2.2A11 11 0 0 0 1 12c0 1.8.4 3.5 1.2 4.9l3.6-2.8Z"/>
+    <path fill="#EA4335" d="M12 5.4c1.6 0 3.1.5 4.2 1.6l3.2-3.1A10.6 10.6 0 0 0 12 1a11 11 0 0 0-9.8 6.1l3.6 2.8A6.6 6.6 0 0 1 12 5.4Z"/>
+  </svg>
+);
 
 export default function Auth({ setUser, addToast, theme, toggleTheme }) {
+  const [modal, setModal] = useState(false);
+  const [mobile, setMobile] = useState(false);
   const [isLogin, setIsLogin] = useState(true);
-  const [form, setForm]       = useState({ name: '', email: '', password: '', role: 'user' });
+  const [method, setMethod] = useState('email');
+  const [otpSent, setOtpSent] = useState(false);
+  const [otp, setOtp] = useState('');
   const [loading, setLoading] = useState(false);
+  const [googleModal, setGoogleModal] = useState(false);
+  
+  const [google, setGoogle] = useState({ name: '', email: '' });
+  const [form, setForm] = useState({ name: '', email: '', password: '', role: 'user', phoneNumber: '' });
+  
+  const heroVideoRef = useRef(null);
+  const aboutVideoRef = useRef(null);
+
+  const { scrollYProgress } = useScroll();
+  const heroY = useTransform(scrollYProgress, [0, 0.35], [0, 80]);
+  const heroOpacity = useTransform(scrollYProgress, [0, 0.24], [1, 0]);
+
+  // Robust play retry logic
+  useEffect(() => {
+    const playVideo = (videoEl) => {
+      if (videoEl) {
+        videoEl.muted = true;
+        videoEl.play().catch(() => {});
+      }
+    };
+
+    const interval = setInterval(() => {
+      playVideo(heroVideoRef.current);
+      playVideo(aboutVideoRef.current);
+    }, 1000);
+
+    const handleInteraction = () => {
+      playVideo(heroVideoRef.current);
+      playVideo(aboutVideoRef.current);
+    };
+
+    document.addEventListener('click', handleInteraction);
+    document.addEventListener('touchstart', handleInteraction);
+
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener('click', handleInteraction);
+      document.removeEventListener('touchstart', handleInteraction);
+    };
+  }, []);
 
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
+  const openAuth = (v = true) => { setIsLogin(v); setModal(true); setMobile(false); };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const sendCode = async () => {
+    if (!form.phoneNumber.trim()) return addToast('Enter your phone number', 'error');
     setLoading(true);
     try {
-      if (isLogin) {
-        const res = await login(form.email, form.password);
-        if (res.success) { addToast(`Welcome back, ${res.user.name}!`, 'success'); setUser(res.user); }
-        else addToast(res.message || 'Login failed', 'error');
+      const r = await sendOtp(form.phoneNumber);
+      if (r.success) {
+        setOtpSent(true);
+        addToast(`OTP sent. Demo code: ${r.otp}`, 'success');
       } else {
-        if (!form.name.trim()) return addToast('Please enter your name', 'error');
-        const res = await signup(form.name, form.email, form.password, form.role);
-        if (res.success) { addToast(`Account created! Welcome, ${res.user.name}!`, 'success'); setUser(res.user); }
-        else addToast(res.message || 'Signup failed', 'error');
+        addToast(r.message || 'Could not send OTP', 'error');
       }
     } catch {
-      addToast('Cannot connect to server. Ensure backend is running.', 'error');
+      addToast('Cannot connect to the server.', 'error');
     } finally {
       setLoading(false);
     }
   };
 
-  const inputCls = "w-full px-4 py-3 rounded-xl border border-slate-200/50 dark:border-slate-700 bg-white/50 dark:bg-slate-900/50 text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 outline-none focus:ring-2 focus:ring-primary-500/50 transition-all backdrop-blur-sm";
-  const labelCls = "block text-sm font-semibold text-slate-600 dark:text-slate-300 mb-1.5 ml-1";
+  const submit = async e => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      let r;
+      if (isLogin && method === 'phone') {
+        if (!otpSent) {
+          setLoading(false);
+          return sendCode();
+        }
+        r = await verifyOtp(form.phoneNumber, otp, form.role);
+      } else if (isLogin) {
+        r = await login(form.email, form.password);
+      } else {
+        r = await signup(form.name, form.email, form.password, form.role, form.phoneNumber);
+      }
+      
+      if (r.success) {
+        addToast(`Welcome${r.user?.name ? `, ${r.user.name}` : ''}!`, 'success');
+        setUser(r.user);
+      } else {
+        addToast(r.message || 'Authentication failed', 'error');
+      }
+    } catch {
+      addToast('Cannot connect to the server. Make sure the backend is running.', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  // Animation variants
-  const fadeIn = { hidden: { opacity: 0, y: 10 }, visible: { opacity: 1, y: 0 } };
+  const googleSubmit = async e => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const r = await googleLogin(google.email, google.name, form.role);
+      if (r.success) {
+        setUser(r.user);
+        addToast(`Welcome, ${r.user.name}!`, 'success');
+      } else {
+        addToast(r.message || 'Google sign-in failed', 'error');
+      }
+    } catch {
+      addToast('Cannot connect to the server.', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const inputCls = 'w-full rounded-xl border border-slate-300 dark:border-white/10 bg-white/60 dark:bg-white/[.055] px-4 py-3.5 text-sm text-[#2b3033] dark:text-white outline-none placeholder:text-slate-500 focus:border-[#15BCDF] focus:ring-2 focus:ring-[#15BCDF]/20 transition-all';
 
   return (
-    <div className="relative min-h-screen flex items-center justify-center p-4 overflow-hidden">
+    <div className="landing-shell min-h-screen bg-[#F2F1F0] dark:bg-[#111] text-[#2b3033] dark:text-white selection:bg-[#15BCDF] selection:text-white font-sans transition-colors duration-500">
       
-      {/* Background decorations */}
-      <div className="absolute top-0 left-0 w-full h-full overflow-hidden -z-10 bg-slate-50 dark:bg-slate-950 transition-colors duration-500">
-        <motion.div animate={{ rotate: 360 }} transition={{ duration: 100, repeat: Infinity, ease: 'linear' }}
-          className="absolute -top-1/2 -left-1/4 w-[150%] h-[150%] bg-[conic-gradient(from_0deg_at_50%_50%,rgba(20,184,166,0.1),rgba(139,92,246,0.1),rgba(20,184,166,0.1))] blur-3xl opacity-60 dark:opacity-40" />
-      </div>
-
-      {/* Theme toggle */}
-      <button onClick={toggleTheme} className="fixed top-6 right-6 p-2.5 rounded-2xl glass-card text-slate-500 dark:text-slate-300 hover:text-primary-600 transition-colors shadow-lg z-50 focus:ring-2 ring-primary-500/20">
-        {theme === 'dark' ? <Sun className="w-5 h-5 text-warning" /> : <Moon className="w-5 h-5 text-indigo-500" />}
-      </button>
-
-      <motion.div initial="hidden" animate="visible" variants={{ visible: { transition: { staggerChildren: 0.1 } } }}
-        className="w-full max-w-[1000px] flex rounded-[2rem] glass-card overflow-hidden shadow-2xl shadow-primary-900/5 dark:shadow-black/40 border border-white/40 dark:border-slate-800/60 min-h-[600px]">
-        
-        {/* Left: Branding Panel (Hidden on small screens) */}
-        <div className="hidden lg:flex w-1/2 bg-gradient-to-br from-primary-600/90 to-accent-600/90 text-white p-12 flex-col justify-between relative overflow-hidden backdrop-blur-md">
-          <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0IiBoZWlnaHQ9IjQiPgo8cmVjdCB3aWR0aD0iNCIgaGVpZ2h0PSI0IiBmaWxsPSIjZmZmIiBmaWxsLW9wYWNpdHk9IjAuMDUiLz4KPC9zdmc+')] opacity-20 MixBlendMode-overlay mix-blend-overlay"></div>
+      {/* Header */}
+      <header className="fixed inset-x-0 top-0 z-50 px-4 py-4 md:px-8">
+        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between rounded-xl border border-slate-300 dark:border-white/10 bg-[#F2F1F0]/90 dark:bg-[#111]/90 px-6 shadow-md backdrop-blur-xl transition-all">
+          <a href="#top" className="flex items-center gap-3">
+            <span className="grid h-9 w-9 place-items-center rounded-lg bg-[#15BCDF] text-white">
+              <ShieldCheck className="h-5 w-5"/>
+            </span>
+            <span className="text-xl font-bold uppercase tracking-wider text-[#2b3033] dark:text-white">
+              trustpay<span className="text-[#15BCDF]">.</span>
+            </span>
+          </a>
           
-          <motion.div variants={fadeIn} className="relative z-10 flex items-center gap-3">
-            <div className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center font-black text-2xl shadow-xl border border-white/20">T</div>
-            <span className="text-2xl font-black tracking-tight drop-shadow-md">TrustPay</span>
-          </motion.div>
-
-          <motion.div variants={fadeIn} className="relative z-10">
-            <Shield className="w-16 h-16 text-primary-200 mb-6 drop-shadow-lg" />
-            <h1 className="text-4xl font-black mb-4 leading-tight">Secure.<br/>Transparent.<br/>Reliable.</h1>
-            <p className="text-primary-100 text-lg max-w-sm font-medium">
-              India's premier payment verification layer for safe and smart transactions.
-            </p>
-          </motion.div>
-
-          <div className="relative z-10 flex items-center gap-2 text-sm font-semibold text-primary-200 bg-white/10 w-max px-4 py-2 rounded-full border border-white/10 shadow-inner">
-            <Sparkles className="w-4 h-4" /> Ready for the future
+          <nav className="hidden items-center gap-8 text-xs font-bold uppercase tracking-wider text-[#3a3a3a] dark:text-slate-300 md:flex">
+            <a href="#platform" className="hover:text-[#15BCDF] transition-colors">Platform</a>
+            <a href="#security" className="hover:text-[#15BCDF] transition-colors">Security</a>
+            <a href="#how" className="hover:text-[#15BCDF] transition-colors">How it works</a>
+          </nav>
+          
+          <div className="hidden items-center gap-4 md:flex">
+            <button onClick={toggleTheme} aria-label="Toggle theme" className="grid h-10 w-10 place-items-center rounded-lg hover:bg-slate-200 dark:hover:bg-white/10 text-slate-650 dark:text-slate-300">
+              {theme === 'dark' ? <Sun className="h-5 w-5 text-amber-400"/> : <Moon className="h-5 w-5"/>}
+            </button>
+            <button onClick={() => openAuth(true)} className="h-10 rounded-lg px-4 text-xs font-bold uppercase tracking-wider text-[#3a3a3a] dark:text-white hover:bg-slate-250 dark:hover:bg-white/10 transition-all">
+              Sign in
+            </button>
+            <button onClick={() => openAuth(false)} className="btn-chamfered h-11 bg-[#15BCDF] hover:bg-[#3fd0ef] border border-[#0fa3c2] px-6 text-xs font-bold uppercase tracking-wider text-[#111] transition-all shadow-md shadow-[#15BCDF]/10">
+              Get Started
+            </button>
           </div>
-        </div>
-
-        {/* Right: Auth Form Panel */}
-        <div className="w-full lg:w-1/2 p-8 sm:p-12 flex flex-col justify-center bg-white/40 dark:bg-slate-900/40 relative">
           
-          {/* Mobile Logo */}
-          <motion.div variants={fadeIn} className="lg:hidden flex flex-col items-center mb-8">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-primary-500 to-accent-500 flex items-center justify-center text-white font-black text-2xl shadow-lg mb-3">T</div>
-            <h2 className="text-xl font-black text-slate-800 dark:text-slate-100">TrustPay</h2>
-          </motion.div>
+          <button onClick={() => setMobile(v => !v)} aria-label="Open menu" className="grid h-10 w-10 place-items-center rounded-lg border border-slate-350 dark:border-white/10 md:hidden text-slate-800 dark:text-white">
+            {mobile ? <X className="h-5 w-5"/> : <Menu className="h-5 w-5"/>}
+          </button>
+        </div>
+        
+        {mobile && (
+          <div className="mx-auto mt-2 max-w-7xl rounded-xl border border-slate-350 dark:border-white/10 bg-[#F2F1F0] dark:bg-[#1a1c1e] p-4 shadow-xl md:hidden">
+            <nav className="flex flex-col font-bold text-xs uppercase tracking-wider text-[#3a3a3a] dark:text-slate-300">
+              <a className="p-3 hover:bg-slate-200 dark:hover:bg-white/5 rounded-lg" href="#platform">Platform</a>
+              <a className="p-3 hover:bg-slate-200 dark:hover:bg-white/5 rounded-lg" href="#security">Security</a>
+              <a className="p-3 hover:bg-slate-200 dark:hover:bg-white/5 rounded-lg" href="#how">How it works</a>
+            </nav>
+            <button onClick={() => openAuth(false)} className="w-full mt-3 rounded-lg bg-[#15BCDF] p-3 text-xs font-bold uppercase tracking-wider text-[#111]">
+              Get started
+            </button>
+          </div>
+        )}
+      </header>
+      
+      <main id="top">
+        
+        {/* Section 1 — Hero */}
+        <section className="relative flex min-h-[100svh] items-end overflow-hidden px-6 pb-16 pt-32 md:px-12 md:pb-24 bg-[#F2F1F0] dark:bg-[#111]">
+          
+          {/* Background Video */}
+          <video 
+            ref={heroVideoRef}
+            className="absolute top-0 right-[-20%] md:right-[-10%] w-[119%] md:w-[99%] h-auto object-contain pointer-events-none z-0 opacity-80 mix-blend-multiply dark:mix-blend-normal"
+            autoPlay 
+            muted 
+            loop 
+            playsInline
+            preload="auto"
+          >
+            <source src={HERO_VIDEO} type="video/mp4"/>
+          </video>
 
-          <motion.div variants={fadeIn} className="mb-8 text-center lg:text-left">
-            <h2 className="text-3xl font-black bg-clip-text text-transparent bg-gradient-to-r from-primary-600 to-accent-600 dark:from-primary-400 dark:to-accent-400">
-              {isLogin ? 'Welcome Back' : 'Create Account'}
-            </h2>
-            <p className="text-sm font-medium text-slate-500 dark:text-slate-400 mt-2 mb-6">
-              {isLogin ? 'Select your portal to securely access the dashboard.' : 'Join the trusted payment network today.'}
-            </p>
+          {/* Desktop Left Scrim */}
+          <div className="hidden md:block absolute inset-0 left-0 w-[70%] bg-gradient-to-r from-[#F2F1F0] via-[#F2F1F0] to-transparent dark:from-[#111] dark:via-[#111] z-10 pointer-events-none" />
+          
+          <motion.div style={{ y: heroY, opacity: heroOpacity }} className="relative z-20 mx-auto w-full max-w-7xl pt-[360px] md:pt-0">
+            
+            {/* Staircase Headline */}
+            <h1 className="max-w-5xl text-[clamp(34px,7.6vw,80px)] font-bold leading-[0.98] uppercase tracking-wide text-[#2b3033] dark:text-white">
+              SCALING<br/>
+              THE<br/>
+              PLATFORM<br/>
+              <span className="block pl-[min(238px,28vw)]">FOR</span>
+              <span className="block pl-[min(238px,28vw)]">YOUR</span>
+              <span className="block pl-[min(238px,28vw)] text-[#15BCDF]">BUSINESS</span>
+            </h1>
 
-            {/* Portal Toggle Switcher */}
-            <div className="flex bg-slate-100 dark:bg-slate-800 p-1.5 rounded-xl border border-slate-200 dark:border-slate-700/50 shadow-inner">
+            {/* CTA Button */}
+            <div className="mt-8 pl-[min(238px,28vw)]">
               <button 
-                type="button" 
-                onClick={() => { set('role', 'user'); if(isLogin) { set('email', 'keshavdharla@gmail.com'); set('password', 'password123'); } }} 
-                className={cn("flex-1 py-2.5 text-sm font-black tracking-wide rounded-lg transition-all", form.role === 'user' ? "bg-white dark:bg-slate-900 shadow-md text-primary-600 dark:text-primary-400" : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300")}>
-                Customer Portal
-              </button>
-              <button 
-                type="button" 
-                onClick={() => { set('role', 'merchant'); if(isLogin) { set('email', 'merchant@trustpay.tech'); set('password', 'merchant123'); } }} 
-                className={cn("flex-1 py-2.5 text-sm font-black tracking-wide rounded-lg transition-all", form.role === 'merchant' ? "bg-white dark:bg-slate-900 shadow-md text-accent-600 dark:text-accent-400" : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300")}>
-                Merchant Portal
+                onClick={() => openAuth(false)} 
+                className="btn-chamfered relative group flex items-center justify-center gap-3 bg-[#15BCDF] hover:bg-[#3fd0ef] border border-[#0fa3c2] px-8 py-4.5 text-xs font-bold uppercase tracking-[0.14em] text-[#1a1c1e] transition-all"
+                style={{
+                  boxShadow: '0 0 0 1px rgba(21,188,223,0.35), 0 10px 30px -12px rgba(15,163,194,0.6)'
+                }}
+              >
+                GET STARTED
+                <span className="w-6 h-px bg-[#1a1c1e] group-hover:w-8 transition-all" />
               </button>
             </div>
-            {isLogin && <p className="text-[10px] uppercase font-bold tracking-widest text-slate-400 mt-3 flex items-center justify-center gap-1.5"><Shield className="w-3 h-3" /> Auto-fills credentials</p>}
+
           </motion.div>
+        </section>
+        
+        {/* Section 2 — About */}
+        <section id="security" className="relative flex flex-wrap items-center gap-[40px] py-[clamp(60px,10vw,140px)] pl-[clamp(20px,9vw,118px)] pr-0 bg-gradient-to-b from-[#F2F1F0] via-[#F7F6F8] to-[#F7F6F8] dark:from-[#111] dark:to-[#1a1c1e]">
+          
+          {/* Left Column */}
+          <div className="flex-1 min-w-[300px] max-w-[520px] z-10">
+            
+            {/* Staircase H2 */}
+            <h2 className="text-[clamp(34px,6.5vw,72px)] font-bold leading-[0.98] uppercase tracking-wide text-[#2b3033] dark:text-white">
+              ABOUT<br/>
+              <span className="block pl-[min(160px,18vw)] text-[#15BCDF]">BUSINESS</span>
+            </h2>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <AnimatePresence mode="popLayout">
-              {!isLogin && (
-                <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}>
-                  <label className={labelCls}>Full Name</label>
-                  <input type="text" required value={form.name} onChange={e => set('name', e.target.value)} className={inputCls} placeholder="e.g. Rahul Sharma" />
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            <motion.div variants={fadeIn}>
-              <label className={labelCls}>Email Address</label>
-              <input type="email" required value={form.email} onChange={e => set('email', e.target.value)} className={inputCls} placeholder="rahul@example.com" />
-            </motion.div>
-
-            <motion.div variants={fadeIn}>
-              <label className={labelCls}>Password</label>
-              <input type="password" required value={form.password} onChange={e => set('password', e.target.value)} className={inputCls} placeholder="••••••••" />
-            </motion.div>
-
-            <AnimatePresence mode="popLayout">
-               {/* Role toggle was moved to the top. This block is clean. */}
-            </AnimatePresence>
-
-            <motion.button variants={fadeIn} type="submit" disabled={loading}
-              className="w-full mt-6 py-3.5 bg-gradient-to-r from-primary-500 to-accent-500 hover:from-primary-600 hover:to-accent-600 disabled:opacity-60 text-white font-black rounded-xl shadow-lg shadow-primary-500/25 transition-all active:scale-[0.98]">
-              {loading ? 'Please wait...' : isLogin ? 'Sign In Securely' : 'Create Account'}
-            </motion.button>
-          </form>
-
-          <motion.div variants={fadeIn} className="mt-8 text-center">
-            <p className="text-sm font-semibold text-slate-500 dark:text-slate-400">
-              {isLogin ? "Don't have an account? " : 'Already have an account? '}
-              <button type="button" onClick={() => setIsLogin(!isLogin)} className="text-primary-600 dark:text-primary-400 hover:underline">
-                {isLogin ? 'Sign up' : 'Sign in'}
-              </button>
+            {/* Copy verbatim */}
+            <p className="mt-[32px] ml-[min(160px,18vw)] text-[clamp(14px,1.6vw,17px)] line-height-[1.7] text-[#6b6f72] dark:text-slate-350 font-medium">
+              Targo builds the testing infrastructure modern teams rely on. From automated pipelines to full-scale QA audits, we make sure your software ships fast and breaks nothing. Hundreds of releases, zero surprises.
             </p>
+
+            {/* Learn More Button */}
+            <div className="mt-[36px] ml-[min(160px,18vw)]">
+              <button 
+                onClick={() => openAuth(true)}
+                className="btn-chamfered group flex items-center justify-center gap-3 bg-[#15BCDF] hover:bg-[#3fd0ef] border border-[#0fa3c2] px-8 py-4.5 text-xs font-bold uppercase tracking-[0.14em] text-[#1a1c1e] transition-all"
+                style={{
+                  boxShadow: '0 0 0 1px rgba(21,188,223,0.35), 0 10px 30px -12px rgba(15,163,194,0.6)'
+                }}
+              >
+                LEARN MORE
+                <span className="w-6 h-px bg-[#1a1c1e] group-hover:w-8 transition-all" />
+              </button>
+            </div>
+
+          </div>
+
+          {/* Right Column */}
+          <div className="flex-1 min-w-[280px] flex justify-end relative">
+            <video 
+              ref={aboutVideoRef}
+              className="w-full max-w-[644px] h-auto object-cover z-0"
+              autoPlay 
+              muted 
+              loop 
+              playsInline
+              preload="auto"
+            >
+              <source src={ABOUT_VIDEO} type="video/mp4"/>
+            </video>
+            
+            {/* Overlay Cyan tint */}
+            <div className="absolute inset-0 right-0 w-full max-w-[644px] h-full bg-[#15BCDF] mix-blend-hue pointer-events-none z-10 opacity-70" />
+          </div>
+
+        </section>
+
+        {/* Core Architecture Section */}
+        <section id="platform" className="px-6 py-24 md:px-12 md:py-32 max-w-7xl mx-auto">
+          <motion.div {...reveal}>
+            <div className="mb-16 grid gap-8 lg:grid-cols-2 lg:items-end">
+              <div>
+                <p className="mb-4 text-xs font-bold uppercase tracking-widest text-[#15BCDF]">Payment Trust Engine</p>
+                <h2 className="text-3xl font-bold uppercase leading-[0.98] tracking-wide text-[#2b3033] dark:text-white md:text-5xl">
+                  ZERO TRUST ARCHITECTURE.<br/>
+                  VERIFIED DEPOSITS.
+                </h2>
+              </div>
+              <p className="max-w-lg text-sm leading-relaxed text-[#6b6f72] dark:text-slate-450 lg:justify-self-end font-medium">
+                TrustPay combines QR cryptography, text threat analysis, live API confirmations, and family guard features inside one central Payment Trust Engine.
+              </p>
+            </div>
+            
+            <div className="grid gap-6 md:grid-cols-12">
+              <Feature wide n="01" icon={Fingerprint} title="PAYMENT PROOF ANALYZER" text="Analyze digital screenshots and transactions to check font consistency and editing artifacts in second-level canvas forensics."/>
+              <Feature n="02" icon={Zap} title="LIVE MATCH ENGINE" text="Simulated server logs confirm settlement status before authorizing item exchanges."/>
+              <Feature n="03" icon={UserRound} title="GUARDIAN PROTECTION" text="Require family approval filters on elderly accounts for transaction limit triggers."/>
+              <Feature wide n="04" icon={Sparkles} title="TRANSACTION REGISTRY" text="Generate dynamic HMAC time-locked QR codes to maintain structural receipt hashes securely."/>
+            </div>
           </motion.div>
+        </section>
+        
+        {/* Steps Section */}
+        <section id="how" className="px-6 py-24 md:px-12 md:py-32 max-w-7xl mx-auto">
+          <motion.div {...reveal}>
+            <p className="text-xs font-bold uppercase tracking-widest text-[#15BCDF]">Operations Protocol</p>
+            <h2 className="mt-4 max-w-3xl text-3xl font-bold uppercase leading-[0.98] tracking-wide text-[#2b3033] dark:text-white md:text-5xl">Verify details in three steps.</h2>
+            
+            <div className="mt-16 grid gap-px overflow-hidden rounded-xl border border-slate-300 dark:border-white/10 bg-slate-300 dark:bg-white/10 md:grid-cols-3">
+              {[['01', 'CONNECT', 'Register role configuration credentials safely.'], ['02', 'VALIDATE', 'Generate dynamic verification QR requests or scan them.'], ['03', 'SETTLE', 'Confirm transaction parameters via cryptographic signature hashes.']].map(([n, t, d]) => (
+                <div key={n} className="bg-[#F2F1F0] dark:bg-[#111] p-8 md:p-10 flex flex-col justify-between min-h-[220px]">
+                  <span className="text-sm font-bold text-[#15BCDF]">{n}</span>
+                  <div>
+                    <h3 className="text-lg font-bold uppercase text-[#2b3033] dark:text-white tracking-wider">{t}</h3>
+                    <p className="mt-2 text-xs font-medium text-[#6b6f72] dark:text-slate-450 leading-relaxed">{d}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+        </section>
+        
+      </main>
+      
+      {/* Redesigned Footer */}
+      <footer className="border-t border-slate-300 dark:border-white/10 px-6 py-12 bg-[#F2F1F0] dark:bg-[#111]">
+        <div className="mx-auto flex max-w-7xl flex-col gap-6 text-xs font-bold uppercase tracking-wider text-slate-500 md:flex-row md:justify-between items-center">
+          <p>© 2026 TrustPay. Secure Digital Payment Verification System.</p>
+          <div className="flex gap-6 items-center">
+            <a href="#security" className="hover:text-[#15BCDF] transition-colors">Security</a>
+            <button onClick={() => openAuth(true)} className="hover:text-[#15BCDF] transition-colors uppercase font-bold text-xs">Sign in</button>
+            <a href="/family" className="hover:text-[#15BCDF] transition-colors">Family portal</a>
+          </div>
         </div>
-      </motion.div>
+      </footer>
+      
+      {/* Authentication Modal */}
+      <AnimatePresence>
+        {modal && (
+          <div className="fixed inset-0 z-[100] grid place-items-center overflow-y-auto bg-black/60 p-4 backdrop-blur-md" onMouseDown={e => e.target === e.currentTarget && setModal(false)}>
+            <motion.div initial={{ opacity: 0, y: 20, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 15 }} className="relative w-full max-w-md rounded-xl border border-slate-300 dark:border-white/10 bg-[#F2F1F0] dark:bg-[#1a1c1e] p-6 shadow-2xl md:p-8 text-[#2b3033] dark:text-white">
+              
+              <button onClick={() => setModal(false)} aria-label="Close" className="absolute right-5 top-5 grid h-9 w-9 place-items-center rounded-lg border border-slate-355 dark:border-white/10 hover:bg-slate-200 dark:hover:bg-white/5">
+                <X className="h-4.5 w-4.5"/>
+              </button>
+              
+              <div className="mb-6 grid h-12 w-12 place-items-center rounded-lg bg-[#15BCDF] text-white">
+                <LockKeyhole className="h-5 w-5"/>
+              </div>
+              
+              <p className="text-[10px] font-bold uppercase tracking-widest text-[#15BCDF]">Secure Verification Access</p>
+              <h2 className="mt-2 text-2xl font-bold uppercase tracking-wider">{isLogin ? 'Welcome Back.' : 'Get Protected.'}</h2>
+              <p className="mt-1 text-xs text-[#6b6f72] dark:text-slate-400 font-medium">{isLogin ? 'Enter credentials to authorize access.' : 'Configure secure trust verification access.'}</p>
+              
+              <div className="mt-6 grid grid-cols-3 rounded-lg bg-slate-200 dark:bg-white/5 p-1 text-xs font-bold uppercase tracking-wider">
+                {['user', 'merchant', 'guardian'].map(r => (
+                  <button key={r} type="button" onClick={() => set('role', r)} className={`rounded-md py-2.5 transition-all ${form.role === r ? 'bg-[#15BCDF] text-white' : 'text-slate-500 hover:text-slate-750 dark:hover:text-slate-200'}`}>
+                    {r}
+                  </button>
+                ))}
+              </div>
+              
+              {isLogin && (
+                <div className="mt-4 flex gap-4 border-b border-slate-200 dark:border-white/10 text-[10px] font-bold uppercase tracking-wider">
+                  <button type="button" onClick={() => setMethod('email')} className={`pb-2.5 transition-all ${method === 'email' ? 'border-b-2 border-[#15BCDF] text-[#15BCDF]' : 'text-slate-500'}`}>Email</button>
+                  <button type="button" onClick={() => setMethod('phone')} className={`pb-2.5 transition-all ${method === 'phone' ? 'border-b-2 border-[#15BCDF] text-[#15BCDF]' : 'text-slate-500'}`}>Phone OTP</button>
+                </div>
+              )}
+              
+              <form onSubmit={submit} className="mt-5 space-y-4">
+                {!isLogin && (
+                  <input required className={inputCls} placeholder="Full Name" value={form.name} onChange={e => set('name', e.target.value)}/>
+                )}
+                
+                {(!isLogin || method === 'email') && (
+                  <>
+                    <input required type="email" autoComplete="email" className={inputCls} placeholder="Email address" value={form.email} onChange={e => set('email', e.target.value)}/>
+                    <input required type="password" autoComplete={isLogin ? 'current-password' : 'new-password'} minLength={6} className={inputCls} placeholder="Password" value={form.password} onChange={e => set('password', e.target.value)}/>
+                  </>
+                )}
+                
+                {isLogin && method === 'phone' && (
+                  <>
+                    <input required type="tel" className={inputCls} placeholder="Phone number" value={form.phoneNumber} onChange={e => set('phoneNumber', e.target.value)}/>
+                    {otpSent && (
+                      <input required className={`${inputCls} text-center tracking-widest text-lg font-bold font-mono`} placeholder="OTP" value={otp} onChange={e => setOtp(e.target.value)}/>
+                    )}
+                  </>
+                )}
+                
+                <button disabled={loading} className="btn-chamfered flex w-full items-center justify-center gap-2 bg-[#15BCDF] hover:bg-[#3fd0ef] border border-[#0fa3c2] py-4 text-xs font-bold uppercase tracking-wider text-[#111] disabled:opacity-50 transition-all">
+                  {loading ? 'Processing...' : isLogin ? (method === 'phone' && !otpSent ? 'Send Secure Code' : 'Sign in') : 'Create Profile'}
+                  <ArrowRight className="h-4 w-4"/>
+                </button>
+              </form>
+              
+              <div className="my-5 flex items-center gap-3 text-[9px] font-bold uppercase tracking-widest text-slate-500">
+                <span className="h-px flex-1 bg-slate-300 dark:bg-white/10"/>or<span className="h-px flex-1 bg-slate-300 dark:bg-white/10"/>
+              </div>
+              
+              <button onClick={() => setGoogleModal(true)} className="flex w-full items-center justify-center gap-3 rounded-lg border border-slate-355 dark:border-white/10 py-3.5 text-xs font-bold uppercase tracking-wider hover:bg-slate-200 dark:hover:bg-white/5 transition-all text-[#2b3033] dark:text-white">
+                <GoogleIcon/>Continue with Google
+              </button>
+              
+              <p className="mt-6 text-center text-xs font-bold uppercase tracking-wider text-slate-500">
+                {isLogin ? 'New to TrustPay?' : 'Already registered?'} <button type="button" onClick={() => setIsLogin(v => !v)} className="text-[#15BCDF] hover:underline hover:underline-offset-4 font-bold">{isLogin ? 'Register account' : 'Sign in'}</button>
+              </p>
+              
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+      
+      {/* Google Sign in simulation */}
+      <AnimatePresence>
+        {googleModal && (
+          <div className="fixed inset-0 z-[120] grid place-items-center bg-black/60 p-4 backdrop-blur-md">
+            <motion.form onSubmit={googleSubmit} initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} className="w-full max-w-sm rounded-xl border border-slate-300 dark:border-white/10 bg-[#F2F1F0] dark:bg-[#1a1c1e] p-7 text-[#2b3033] dark:text-white">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <GoogleIcon/>
+                  <h3 className="text-sm font-bold uppercase tracking-wider">Authorize Profile</h3>
+                </div>
+                <button type="button" onClick={() => setGoogleModal(false)} className="text-slate-400 hover:text-slate-600"><X/></button>
+              </div>
+              <p className="mt-3 text-xs text-[#6b6f72] dark:text-slate-400 font-medium">Demo sign-in: enter the Google credentials you want to use.</p>
+              <div className="mt-6 space-y-4">
+                <input required className={inputCls} placeholder="Name" value={google.name} onChange={e => setGoogle({ ...google, name: e.target.value })}/>
+                <input required type="email" className={inputCls} placeholder="Google email" value={google.email} onChange={e => setGoogle({ ...google, email: e.target.value })}/>
+                <button disabled={loading} className="w-full rounded-lg bg-[#15BCDF] hover:bg-[#3fd0ef] py-3.5 text-xs font-bold uppercase tracking-wider text-[#111] transition-all">
+                  Authorize Sync
+                </button>
+              </div>
+            </motion.form>
+          </div>
+        )}
+      </AnimatePresence>
+      
     </div>
+  );
+}
+
+function Feature({ n, icon: Icon, title, text, wide }) {
+  return (
+    <motion.article {...reveal} className={`${wide ? 'md:col-span-7' : 'md:col-span-5'} group min-h-[300px] rounded-xl border border-slate-300 dark:border-white/10 bg-white/60 dark:bg-[#1a1c1e] p-8 hover:border-[#15BCDF] dark:hover:border-[#15BCDF]/60 transition-all duration-300 flex flex-col justify-between shadow-sm hover:shadow-md`}>
+      <div className="flex justify-between items-start">
+        <span className="text-xs font-bold text-[#15BCDF]">{n}</span>
+        <span className="grid h-12 w-12 place-items-center rounded-lg bg-[#15BCDF]/10 text-[#15BCDF] group-hover:scale-105 transition-transform"><Icon/></span>
+      </div>
+      <div>
+        <h3 className="text-lg font-bold uppercase tracking-wider text-[#2b3033] dark:text-white">{title}</h3>
+        <p className="mt-2 text-xs font-medium text-[#6b6f72] dark:text-slate-400 leading-relaxed">{text}</p>
+      </div>
+    </motion.article>
   );
 }

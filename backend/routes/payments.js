@@ -204,7 +204,7 @@ router.post('/scam-check', (req, res) => {
 // POST /api/payments/analyze-screenshot — Forensic analyzer simulation
 router.post('/analyze-screenshot', async (req, res) => {
   try {
-    const { imageName, simulatedText } = req.body;
+    const { imageName, simulatedText, imageData } = req.body;
 
     let isFake = false;
     let details = [];
@@ -213,6 +213,7 @@ router.post('/analyze-screenshot', async (req, res) => {
     const lowerName = (imageName || '').toLowerCase();
     const lowerText = (simulatedText || '').toLowerCase();
 
+    // Check 1: Filename and Simulated text heuristics (existing logic)
     if (lowerName.includes('fake') || lowerName.includes('manipulated') || lowerText.includes('spoof') || lowerText.includes('paytm spoof') || lowerText.includes('gpay fake') || lowerName.includes('bad') || lowerName.includes('shot')) {
       isFake = true;
       details = [
@@ -226,8 +227,45 @@ router.post('/analyze-screenshot', async (req, res) => {
         { field: 'txnId', x: 60, y: 260, width: 280, height: 30, label: 'Invalid TXN ID signature' },
         { field: 'brand', x: 20, y: 20, width: 100, height: 35, label: 'Spoofed UI Watermark Overlay' }
       ];
-    } else {
-      isFake = false;
+    }
+
+    // Check 2: Hex/Binary search in uploaded image base64 data for editor signatures
+    if (!isFake && imageData) {
+      try {
+        const base64Data = imageData.replace(/^data:image\/\w+;base64,/, '');
+        const buffer = Buffer.from(base64Data, 'base64');
+        const binaryString = buffer.toString('binary');
+        const lowerBinary = binaryString.toLowerCase();
+
+        // Common image editing tools / screenshot generator signatures in metadata
+        const softwareSignatures = [
+          'photoshop', 'gimp', 'paint.net', 'canva', 'adobe', 
+          'pixelmator', 'picsart', 'snapseed', 'lightroom', 'phonto'
+        ];
+
+        for (const sig of softwareSignatures) {
+          if (lowerBinary.includes(sig)) {
+            isFake = true;
+            details = [
+              `Image editing trace detected: File structure contains software signature: "${sig.toUpperCase()}".`,
+              'Typography mismatch: Amount uses non-standard font weight and letter spacing.',
+              'Inconsistent compression: Compression noise is significantly lower around the amount text, indicating editing.',
+              'Metadata validation failed: Created/edited with an unauthorized image editing application.'
+            ];
+            overlays = [
+              { field: 'metadata', x: 10, y: 10, width: 360, height: 460, label: `Editor signature: ${sig.toUpperCase()}` },
+              { field: 'amount', x: 90, y: 130, width: 220, height: 50, label: 'Typography Mismatch (Fake Font)' }
+            ];
+            break;
+          }
+        }
+      } catch (e) {
+        console.error('Failed to parse uploaded image data metadata:', e);
+      }
+    }
+
+    // If no fake indicators found, mark as authentic
+    if (!isFake) {
       details = [
         'Typography matched: System fonts match standard transaction receipt template.',
         'Texture consistency verified: Uniform noise distribution.',
@@ -243,6 +281,7 @@ router.post('/analyze-screenshot', async (req, res) => {
       overlays
     });
   } catch (err) {
+    console.error('Forensics check failed:', err);
     res.status(500).json({ success: false, message: 'Forensics check failed.' });
   }
 });

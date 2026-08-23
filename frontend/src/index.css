@@ -5,38 +5,55 @@
 @layer base {
   html { scroll-behavior: smooth; }
 
-  /* ── Light theme: Refined crisp modern vibe ── */
   body {
-    @apply bg-slate-50 text-slate-800 font-sans antialiased min-h-screen selection:bg-primary-200 selection:text-primary-900;
-    /* Soft textured background for light mode */
-    background-image: radial-gradient(circle at 15% 50%, rgba(20, 184, 166, 0.04), transparent 25%),
-                      radial-gradient(circle at 85% 30%, rgba(139, 92, 246, 0.04), transparent 25%);
-    background-attachment: fixed;
+    @apply bg-[#F2F1F0] text-[#2b3033] font-sans antialiased min-h-screen selection:bg-[#15BCDF] selection:text-white;
   }
 
-  /* ── Dark theme: Deep immersive vibe ── */
+  body:has(.landing-shell) {
+    background: #F2F1F0;
+  }
+
   .dark body {
-    @apply bg-slate-950 text-slate-100 selection:bg-primary-500/30 selection:text-primary-100;
-    /* Deep rich background with subtle glows for dark mode */
-    background-image: radial-gradient(circle at 15% 50%, rgba(20, 184, 166, 0.08), transparent 25%),
-                      radial-gradient(circle at 85% 30%, rgba(139, 92, 246, 0.08), transparent 25%);
-    background-attachment: fixed;
+    @apply bg-[#111] text-white selection:bg-[#15BCDF] selection:text-[#111];
   }
 }
 
 @layer utilities {
   .glass {
-    @apply bg-white/70 backdrop-blur-md border border-white/20 shadow-[0_8px_32px_0_rgba(31,38,135,0.07)];
+    @apply bg-white/45 backdrop-blur-xl border border-white/40 shadow-sm;
   }
   .dark .glass {
-    @apply bg-slate-900/60 backdrop-blur-md border border-slate-800/50 shadow-[0_8px_32px_0_rgba(0,0,0,0.3)];
+    @apply bg-[#1a1c1e]/45 backdrop-blur-xl border border-white/5 shadow-md;
   }
   
   .glass-card {
-    @apply bg-white/80 backdrop-blur-xl border border-slate-200/50 shadow-sm hover:shadow-md transition-shadow;
+    @apply bg-white/60 backdrop-blur-2xl border border-white/40 shadow-sm hover:shadow-md hover:bg-white/80 transition-all duration-300;
   }
   .dark .glass-card {
-    @apply bg-slate-900/80 backdrop-blur-xl border border-slate-800/60 shadow-none hover:shadow-lg hover:shadow-black/20 transition-shadow;
+    @apply bg-[#1a1c1e]/60 backdrop-blur-2xl border border-white/5 shadow-md hover:shadow-lg hover:bg-[#1a1c1e]/80 transition-all duration-300;
+  }
+  
+  /* Chamfered Button clip path */
+  .btn-chamfered {
+    clip-path: polygon(
+      0 0,
+      calc(100% - 12px) 0,
+      100% 12px,
+      100% 100%,
+      12px 100%,
+      0 calc(100% - 12px)
+    );
+  }
+  
+  .btn-chamfered-lg {
+    clip-path: polygon(
+      0 0,
+      calc(100% - 16px) 0,
+      100% 16px,
+      100% 100%,
+      16px 100%,
+      0 calc(100% - 16px)
+    );
   }
 }
 
@@ -60,4 +77,16 @@
   transition-property: background-color, border-color, color, fill, stroke;
   transition-duration: 300ms;
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.landing-shell *, .landing-shell *::before, .landing-shell *::after {
+  transition-property: background-color, border-color, color, opacity, transform;
+}
+
+.landing-shell a, .landing-shell button { transition-duration: 200ms; }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; }
+  .landing-shell video { display: none; }
 }

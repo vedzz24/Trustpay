@@ -97,13 +97,47 @@ export default function FamilyPortal() {
   const reset = () => { setResult(null); setRequest(null); };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center p-4">
-      <div className="w-full max-w-sm space-y-4">
+    <div className="min-h-screen bg-white dark:bg-slate-950 flex items-center justify-center p-4 relative overflow-hidden transition-colors duration-500">
+      
+      {/* Background decoration blobs (ice blue organic shapes) */}
+      <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] rounded-full bg-blue-50 dark:bg-blue-950/10 blur-3xl pointer-events-none z-0" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[60%] rounded-full bg-cyan-50/40 dark:bg-cyan-950/10 blur-3xl pointer-events-none z-0" />
+      
+      {/* Plant Left SVG */}
+      <div className="fixed bottom-0 left-0 pointer-events-none opacity-20 dark:opacity-10 z-0">
+        <svg viewBox="0 0 200 200" className="w-36 h-36 lg:w-44 lg:h-44">
+          <path d="M100,150 Q70,90 85,30 Q90,90 100,150" fill="#2563eb" opacity="0.75" />
+          <path d="M100,150 Q110,80 95,20 Q115,80 100,150" fill="#3b82f6" />
+          <path d="M100,150 Q60,100 65,50 Q80,100 100,150" fill="#60a5fa" opacity="0.6" />
+          <path d="M100,150 Q130,100 120,40 Q110,100 100,150" fill="#1d4ed8" opacity="0.85" />
+          <path d="M100,150 Q140,110 135,60 Q120,110 100,150" fill="#93c5fd" opacity="0.65" />
+          <ellipse cx="100" cy="150" rx="35" ry="8" fill="#d1e3f3" className="dark:fill-slate-805 bg-slate-100" />
+          <path d="M65,150 L75,185 L125,185 L135,150 Z" fill="#b9d5ee" className="dark:fill-slate-850" />
+        </svg>
+      </div>
+
+      {/* Plant Right SVG */}
+      <div className="fixed bottom-0 right-0 pointer-events-none opacity-20 dark:opacity-10 z-0">
+        <svg viewBox="0 0 200 200" className="w-36 h-36 lg:w-44 lg:h-44">
+          <path d="M100,180 Q100,150 100,80" stroke="#3b82f6" strokeWidth="3" fill="none" />
+          <path d="M100,150 Q70,130 50,120" stroke="#3b82f6" strokeWidth="2" fill="none" />
+          <path d="M100,120 Q130,100 150,90" stroke="#3b82f6" strokeWidth="2" fill="none" />
+          <path d="M100,80 C80,70 70,50 100,20 C130,50 120,70 100,80" fill="#3b82f6" />
+          <path d="M50,120 C35,110 25,90 50,70 C75,90 65,110 50,120" fill="#60a5fa" opacity="0.8" />
+          <path d="M150,90 C135,80 125,60 150,40 C175,60 165,80 150,90" fill="#2563eb" opacity="0.75" />
+          <ellipse cx="100" cy="180" rx="30" ry="6" fill="#d1e3f3" className="dark:fill-slate-805 bg-slate-100" />
+          <path d="M70,180 L78,200 L122,200 L130,180 Z" fill="#b9d5ee" className="dark:fill-slate-850" />
+        </svg>
+      </div>
+
+      <div className="w-full max-w-sm space-y-4 relative z-10">
 
         {/* Header */}
         <div className="text-center mb-6">
-          <div className="w-14 h-14 rounded-2xl bg-cyan-500 flex items-center justify-center text-white font-black text-2xl shadow-lg mx-auto mb-3">T</div>
-          <h1 className="text-xl font-black text-cyan-600 dark:text-slate-100">TrustPay Family Portal</h1>
+          <div className="w-12 h-12 rounded-full border-[6px] border-amber-500 flex items-center justify-center bg-white shadow-md mx-auto mb-3">
+            <div className="w-3.5 h-3.5 rounded-full bg-blue-600 shadow-inner" />
+          </div>
+          <h1 className="text-xl font-black text-blue-650 dark:text-slate-100">TrustPay Family Portal</h1>
           <p className="text-sm text-slate-500 dark:text-slate-300 mt-1">
             You are the guardian for this account. Approve or reject payments made by your family member.
           </p>
