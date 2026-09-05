@@ -30,7 +30,6 @@ export default function Footer() {
               <Link className="text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-cyan-600 dark:hover:text-cyan-400 hover:translate-x-1 transition-all duration-300 w-max" to="/">Secure Gateway</Link>
               <Link className="text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-cyan-600 dark:hover:text-cyan-400 hover:translate-x-1 transition-all duration-300 w-max" to="/safe">Text Forensics Engine</Link>
               <Link className="text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-cyan-600 dark:hover:text-cyan-400 hover:translate-x-1 transition-all duration-300 w-max" to="/analytics">Merchant Analytics</Link>
-              <Link className="text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-cyan-600 dark:hover:text-cyan-400 hover:translate-x-1 transition-all duration-300 w-max" to="/family">Family Guardian Portal</Link>
             </div>
           </div>
 

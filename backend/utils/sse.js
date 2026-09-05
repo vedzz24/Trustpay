@@ -10,25 +10,28 @@ function sseHandler(req, res) {
   // Send initial signal
   res.write(`data: ${JSON.stringify({ type: 'connected' })}\n\n`);
 
-  clients.push(res);
+  clients.push({ res, merchantId: req.user?.merchantId || null });
   console.log(`📡 SSE client connected. Active connections: ${clients.length}`);
 
   req.on('close', () => {
-    clients = clients.filter(c => c !== res);
+    clients = clients.filter(client => client.res !== res);
     console.log(`📡 SSE client disconnected. Active connections: ${clients.length}`);
   });
 }
 
-function broadcast(type, data) {
+function broadcastToMerchant(merchantId, type, data) {
   const payload = JSON.stringify({ type, data });
-  console.log(`📢 Broadcasting SSE event: ${type}`);
-  clients.forEach(client => {
+  clients.filter(client => client.merchantId === merchantId).forEach(client => {
     try {
-      client.write(`data: ${payload}\n\n`);
+      client.res.write(`data: ${payload}\n\n`);
     } catch (err) {
-      console.error('Error sending SSE data to client:', err.message);
+      console.error('Error sending merchant SSE data:', err.message);
     }
   });
 }
 
-module.exports = { sseHandler, broadcast };
+function isMerchantStreamConnected(merchantId) {
+  return clients.some(client => client.merchantId === merchantId);
+}
+
+module.exports = { sseHandler, broadcastToMerchant, isMerchantStreamConnected };

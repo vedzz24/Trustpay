@@ -46,9 +46,9 @@ export default function Privacy() {
           <li><strong>Forensic Payloads:</strong> Text strings explicitly submitted by you to the "Message Analyzer." These strings are retained in volatile RAM for 3.5 seconds before total deletion.</li>
         </ul>
 
-        <h2>Section 2: Guardian/Family Protocol</h2>
+        <h2>Section 2: Guardian Protection</h2>
         <p>
-          When triggering the "Alert Family" system, your IP origin and action-state are temporarily broadcasted via Socket layer to the pre-authorized Guardian device. This transmission is heavily enveloped using AES-256 TLS 1.3 standards.
+          When an authenticated safety check produces a HIGH or CRITICAL result and an active GuardianLink exists, TrustPay creates a limited safety alert for the linked Guardian. Alerts exclude passwords, OTPs, UPI PINs, banking credentials, and unnecessary raw message content.
         </p>
 
         <div className="p-6 bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 rounded-2xl my-8 not-prose">

@@ -47,7 +47,10 @@ export default function Analytics({ addToast, readOnly = false }) {
 
   useEffect(() => {
     fetchAnalytics()
-      .then(setData)
+      .then(result => {
+        if (!result.success) throw new Error(result.message || 'Failed to load analytics');
+        setData(result);
+      })
       .catch(() => addToast?.('Failed to load analytics', 'error'))
       .finally(() => setLoading(false));
   }, []);

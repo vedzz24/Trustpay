@@ -1,9 +1,11 @@
 const router  = require('express').Router();
 const QRCode  = require('qrcode');
-const Payment = require('../models/Payment');
-const OtpAlert = require('../models/OtpAlert');
 const crypto = require('crypto');
-const { broadcast } = require('../utils/sse');
+const { broadcastToMerchant } = require('../utils/sse');
+const { requireMerchant } = require('../utils/auth');
+const { getMerchantModels } = require('../utils/merchantDb');
+const { recordSecurityEvent } = require('../utils/securityEvents');
+const { analyzePaymentProof } = require('../utils/fraudProofAnalyzer');
 
 const INDIAN_NAMES = [
   'Rahul Sharma', 'Priya Patel', 'Arjun Reddy', 'Meera Nair',
@@ -20,8 +22,9 @@ function calculateTxnHash(txnId, amount, name, time) {
 }
 
 // GET /api/payments — fetch all payments (newest first)
-router.get('/', async (req, res) => {
+router.get('/', requireMerchant, async (req, res) => {
   try {
+    const { Payment } = getMerchantModels(req.user.merchantId);
     const payments = await Payment.find().sort({ time: -1 }).limit(50);
     res.json({ success: true, payments });
   } catch (err) {
@@ -29,9 +32,24 @@ router.get('/', async (req, res) => {
   }
 });
 
-// POST /api/payments/generate-qr — User generates a payment proof
-router.post('/generate-qr', async (req, res) => {
+// GET /api/merchant/transactions — fetch payments for logged-in merchant
+router.get('/merchant/transactions', requireMerchant, async (req, res) => {
   try {
+    const { Payment, connection } = getMerchantModels(req.user.merchantId);
+    console.info(`Authenticated merchant: ${req.user.merchantId}`);
+    console.info(`Selected database: ${connection.name}`);
+    const payments = await Payment.find().sort({ time: -1 }).limit(50);
+    console.info(`Transactions returned: ${payments.length}`);
+    res.json({ success: true, payments });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Failed to fetch merchant transactions' });
+  }
+});
+
+// POST /api/payments/generate-qr — User generates a payment proof
+router.post('/generate-qr', requireMerchant, async (req, res) => {
+  try {
+    const { Payment } = getMerchantModels(req.user.merchantId);
     const { amount, txnId, name } = req.body;
     if (!amount || isNaN(Number(amount)) || Number(amount) <= 0)
       return res.status(400).json({ success: false, message: 'Invalid amount' });
@@ -71,7 +89,7 @@ router.post('/generate-qr', async (req, res) => {
       time:      hashTime,
     });
 
-    broadcast('payment_created', payment);
+    broadcastToMerchant(req.user.merchantId, 'payment_created', payment);
 
     res.json({
       success: true,
@@ -86,8 +104,9 @@ router.post('/generate-qr', async (req, res) => {
 });
 
 // POST /api/payments/scan-qr — Merchant scans customer QR
-router.post('/scan-qr', async (req, res) => {
+router.post('/scan-qr', requireMerchant, async (req, res) => {
   try {
+    const { Payment } = getMerchantModels(req.user.merchantId);
     const { qrData } = req.body;
     if (!qrData || !qrData.startsWith('trustpay-verify:'))
       return res.json({ success: false, status: 'suspicious', message: 'Invalid TrustPay QR format' });
@@ -123,15 +142,25 @@ router.post('/scan-qr', async (req, res) => {
     const payment = await Payment.findOne({ txnId });
 
     if (!payment) {
+      await recordSecurityEvent(req.user.merchantId, {
+        type: 'PAYMENT_NOT_FOUND', severity: 'WARNING', transactionId: txnId,
+        message: 'Scanned transaction was not found in this merchant ledger.', status: 'NOT_VERIFIED',
+        metadata: { source: 'QR_SCAN' },
+      });
       return res.json({
         success: false,
         status: 'unmatched',
-        message: '⚠️ WARNING: Transaction signature is valid, but it does not exist in the Central UPI database.'
+        message: '⚠️ WARNING: Transaction signature is valid, but it does not exist in this merchant ledger.'
       });
     }
 
     // 3. Double-check that QR values match stored database fields
     if (payment.amount !== Number(amount) || payment.name !== name) {
+      await recordSecurityEvent(req.user.merchantId, {
+        type: 'AMOUNT_MISMATCH', severity: 'HIGH', paymentId: String(payment._id), transactionId: txnId,
+        message: 'Scanned payment values differ from the trusted transaction.', status: 'REJECTED',
+        metadata: { claimedAmount: Number(amount), verifiedAmount: payment.amount, source: 'QR_SCAN' },
+      });
       return res.json({
         success: false,
         status: 'suspicious',
@@ -142,7 +171,13 @@ router.post('/scan-qr', async (req, res) => {
     payment.status = 'verified';
     await payment.save();
 
-    broadcast('payment_updated', payment);
+    await recordSecurityEvent(req.user.merchantId, {
+      type: 'PAYMENT_VERIFIED', severity: 'INFO', paymentId: String(payment._id), transactionId: payment.txnId,
+      message: `₹${payment.amount} payment verified.`, status: 'VERIFIED',
+      metadata: { signatureValid: true, merchantMatch: true, source: 'QR_SCAN' },
+    });
+
+    broadcastToMerchant(req.user.merchantId, 'payment_updated', payment);
 
     res.json({ success: true, status: 'verified', message: 'Payment verified! Cryptographic hash matches database.', payment });
   } catch (err) {
@@ -151,8 +186,9 @@ router.post('/scan-qr', async (req, res) => {
 });
 
 // POST /api/payments/match — Merchant manually verifies by amount+time
-router.post('/match', async (req, res) => {
+router.post('/match', requireMerchant, async (req, res) => {
   try {
+    const { Payment } = getMerchantModels(req.user.merchantId);
     const { amount, time } = req.body;
     const timeMin = time - 60_000;
     const timeMax = time + 60_000;
@@ -162,8 +198,14 @@ router.post('/match', async (req, res) => {
       time:   { $gte: timeMin, $lte: timeMax },
     });
 
-    if (matches.length === 0)
+    if (matches.length === 0) {
+      await recordSecurityEvent(req.user.merchantId, {
+        type: 'PAYMENT_NOT_FOUND', severity: 'WARNING',
+        message: 'No matching payment was found within the verification window.', status: 'NOT_VERIFIED',
+        metadata: { claimedAmount: Number(amount), source: 'MANUAL_MATCH' },
+      });
       return res.json({ status: 'unmatched', message: 'No matching payment found within 60 seconds' });
+    }
     if (matches.length > 1)
       return res.json({ status: 'suspicious', message: 'Multiple similar payments detected — verify manually' });
 
@@ -174,7 +216,13 @@ router.post('/match', async (req, res) => {
     txn.status = 'verified';
     await txn.save();
 
-    broadcast('payment_updated', txn);
+    await recordSecurityEvent(req.user.merchantId, {
+      type: 'PAYMENT_VERIFIED', severity: 'INFO', paymentId: String(txn._id), transactionId: txn.txnId,
+      message: `₹${txn.amount} payment verified.`, status: 'VERIFIED',
+      metadata: { merchantMatch: true, source: 'MANUAL_MATCH' },
+    });
+
+    broadcastToMerchant(req.user.merchantId, 'payment_updated', txn);
 
     res.json({ status: 'verified', message: 'Payment matched and verified!', payment: txn });
   } catch (err) {
@@ -201,95 +249,22 @@ router.post('/scam-check', (req, res) => {
   }
 });
 
-// POST /api/payments/analyze-screenshot — Forensic analyzer simulation
-router.post('/analyze-screenshot', async (req, res) => {
+// POST /api/payments/analyze-screenshot — OCR + trusted tenant verification
+router.post('/analyze-screenshot', requireMerchant, async (req, res) => {
   try {
-    const { imageName, simulatedText, imageData } = req.body;
-
-    let isFake = false;
-    let details = [];
-    let overlays = [];
-
-    const lowerName = (imageName || '').toLowerCase();
-    const lowerText = (simulatedText || '').toLowerCase();
-
-    // Check 1: Filename and Simulated text heuristics (existing logic)
-    if (lowerName.includes('fake') || lowerName.includes('manipulated') || lowerText.includes('spoof') || lowerText.includes('paytm spoof') || lowerText.includes('gpay fake') || lowerName.includes('bad') || lowerName.includes('shot')) {
-      isFake = true;
-      details = [
-        'Typography mismatch: Amount uses non-standard font weight and letter spacing.',
-        'Inconsistent compression: Compression noise is significantly lower around the amount text, indicating editing.',
-        'Metadata validation failed: Created with an unauthorized screenshot generator application.',
-        'Transaction ID check failed: No matching transaction ID found in the UPI central network.'
-      ];
-      overlays = [
-        { field: 'amount', x: 90, y: 130, width: 220, height: 50, label: 'Typography Mismatch (Fake Font)' },
-        { field: 'txnId', x: 60, y: 260, width: 280, height: 30, label: 'Invalid TXN ID signature' },
-        { field: 'brand', x: 20, y: 20, width: 100, height: 35, label: 'Spoofed UI Watermark Overlay' }
-      ];
-    }
-
-    // Check 2: Hex/Binary search in uploaded image base64 data for editor signatures
-    if (!isFake && imageData) {
-      try {
-        const base64Data = imageData.replace(/^data:image\/\w+;base64,/, '');
-        const buffer = Buffer.from(base64Data, 'base64');
-        const binaryString = buffer.toString('binary');
-        const lowerBinary = binaryString.toLowerCase();
-
-        // Common image editing tools / screenshot generator signatures in metadata
-        const softwareSignatures = [
-          'photoshop', 'gimp', 'paint.net', 'canva', 'adobe', 
-          'pixelmator', 'picsart', 'snapseed', 'lightroom', 'phonto'
-        ];
-
-        for (const sig of softwareSignatures) {
-          if (lowerBinary.includes(sig)) {
-            isFake = true;
-            details = [
-              `Image editing trace detected: File structure contains software signature: "${sig.toUpperCase()}".`,
-              'Typography mismatch: Amount uses non-standard font weight and letter spacing.',
-              'Inconsistent compression: Compression noise is significantly lower around the amount text, indicating editing.',
-              'Metadata validation failed: Created/edited with an unauthorized image editing application.'
-            ];
-            overlays = [
-              { field: 'metadata', x: 10, y: 10, width: 360, height: 460, label: `Editor signature: ${sig.toUpperCase()}` },
-              { field: 'amount', x: 90, y: 130, width: 220, height: 50, label: 'Typography Mismatch (Fake Font)' }
-            ];
-            break;
-          }
-        }
-      } catch (e) {
-        console.error('Failed to parse uploaded image data metadata:', e);
-      }
-    }
-
-    // If no fake indicators found, mark as authentic
-    if (!isFake) {
-      details = [
-        'Typography matched: System fonts match standard transaction receipt template.',
-        'Texture consistency verified: Uniform noise distribution.',
-        'Authentic metadata: Valid Android/iOS system screenshot metadata.',
-        'Network sync: Transaction ID exists and status is verified.'
-      ];
-    }
-
-    res.json({
-      success: true,
-      fake: isFake,
-      details,
-      overlays
-    });
+    const result = await analyzePaymentProof({ merchantId: req.user.merchantId, imageData: req.body.imageData });
+    res.json(result);
   } catch (err) {
     console.error('Forensics check failed:', err);
-    res.status(500).json({ success: false, message: 'Forensics check failed.' });
+    res.status(422).json({ success: false, result: 'UNREADABLE_PAYMENT_PROOF', message: 'TrustPay could not reliably read this image. Do not rely on the screenshot alone.' });
   }
 });
 
 // GET /api/payments/otp-alerts — fetch recent OTP threat logs
-router.get('/otp-alerts', async (req, res) => {
+router.get('/otp-alerts', requireMerchant, async (req, res) => {
   try {
-    const alerts = await OtpAlert.find().sort({ createdAt: -1 }).limit(10);
+    const { FraudAlert } = getMerchantModels(req.user.merchantId);
+    const alerts = await FraudAlert.find({ category: 'otp' }).sort({ createdAt: -1 }).limit(10);
     res.json({ success: true, alerts });
   } catch (err) {
     res.status(500).json({ success: false, message: 'Failed to fetch OTP alerts' });
@@ -297,11 +272,13 @@ router.get('/otp-alerts', async (req, res) => {
 });
 
 // POST /api/payments/log-otp-alert — log an OTP alert in MongoDB
-router.post('/log-otp-alert', async (req, res) => {
+router.post('/log-otp-alert', requireMerchant, async (req, res) => {
   try {
+    const { FraudAlert } = getMerchantModels(req.user.merchantId);
     const { sender, message, riskLevel, detectedKeywords, actionTaken } = req.body;
-    const alert = await OtpAlert.create({
-      sender: sender || 'System Intercept',
+    const alert = await FraudAlert.create({
+      category: 'otp',
+      metadata: { sender: sender || 'System Intercept' },
       message: message || '',
       riskLevel: riskLevel || 'low',
       detectedKeywords: detectedKeywords || [],

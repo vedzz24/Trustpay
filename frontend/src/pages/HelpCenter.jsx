@@ -11,7 +11,7 @@ export default function HelpCenter() {
 
   const faqs = [
     { q: "How does the 'Generate QR' prove I paid?", a: "Unlike standard static QR codes, TrustPay generates dynamic, time-locked cryptographic tokens. When you mint a QR receipt, the backend signs the timestamp and amount. When the merchant scans it, the central server validates the signature, completely eliminating the chance of fake screenshot apps fooling the merchant." },
-    { q: "How does the Safe Mode Guardian system work?", a: "If you attempt a transaction above your configured threshold (default ₹2,500), Safe Mode freezes the transaction and automatically pushes a temporary URL snippet to your registered family member. The transaction will pend indefinitely on your screen until they explicitly click 'Approve'." },
+    { q: "How does Guardian Protection work?", a: "A registered User can invite a trusted Guardian. After the invitation is accepted, authenticated TrustPay safety checks classified HIGH or CRITICAL create an alert for that Guardian. Guardian Protection does not approve, block, or control external payments." },
     { q: "Is the Scam Message Analyzer reading my private texts?", a: "No. TrustPay’s forensic analyzer does not auto-scan your inbox. You must intentionally copy and paste suspicious text into the engine. Our system then cross-references known malicious patterns (e.g., urgency flags, illegitimate UPI shortcodes)." },
     { q: "Can merchants fake matching transactions?", a: "Our proprietary 60-second temporal matching algorithm requires standard payment networks to sync precisely with the user's terminal clock. If multiple payments collide, the system flags it as 'Suspicious' and forces manual ID verification." }
   ];

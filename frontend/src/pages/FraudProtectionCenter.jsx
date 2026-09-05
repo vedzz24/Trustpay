@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { ShieldCheck, ShieldAlert, FileText, QrCode, ClipboardList } from 'lucide-react';
-import { checkScam, fetchOtpAlerts, analyzeScreenshot } from '../utils/api';
+import { checkScam, fetchFraudAlerts, analyzeScreenshot } from '../utils/api';
 import { cn } from '../utils/cn';
 
 export default function FraudProtectionCenter({ addToast }) {
@@ -24,31 +24,34 @@ export default function FraudProtectionCenter({ addToast }) {
   const [alerts, setAlerts] = useState([]);
 
   useEffect(() => {
-    fetchOtpAlerts()
+    fetchFraudAlerts()
       .then(res => { if (res.success) setAlerts(res.alerts || []); })
       .catch(() => {});
   }, [activeTab]);
 
-  const handleProofScan = () => {
+  const handleProofScan = async () => {
     if (!selectedFile) return;
+    if (!['image/png', 'image/jpeg', 'image/webp'].includes(selectedFile.type) || selectedFile.size > 5 * 1024 * 1024) {
+      addToast?.('Upload a PNG, JPG, or WEBP image up to 5MB.', 'error');
+      return;
+    }
     setAnalyzingProof(true);
     setProofResult(null);
-    setTimeout(async () => {
+    try {
+      const imageData = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(selectedFile);
+      });
+      const result = await analyzeScreenshot(imageData);
+      setProofResult(result);
+    } catch {
+      setProofResult(null);
+      addToast?.('Failed to analyze payment proof.', 'error');
+    } finally {
       setAnalyzingProof(false);
-      const isFake = selectedFile.name.toLowerCase().includes('fake') || selectedFile.name.toLowerCase().includes('edited');
-      const details = isFake 
-        ? [
-            "Typography Mismatch: Receipt font weights differ from banking standard templates.",
-            "Inconsistent metadata: Editing signatures detected in transaction block.",
-            "Integrity sync mismatch: Transaction ID could not be matched with Sandbox Payment Provider settlement."
-          ]
-        : [
-            "Consistent compression: Noise distribution uniform.",
-            "Valid metadata parameters.",
-            "Legitimate verification status."
-          ];
-      setProofResult({ fake: isFake, details });
-    }, 2000);
+    }
   };
 
   const handleScamCheck = async (e) => {
@@ -122,7 +125,7 @@ export default function FraudProtectionCenter({ addToast }) {
             </div>
 
             <div className="border-2 border-dashed border-slate-300 dark:border-white/10 rounded-xl p-8 text-center bg-slate-50/50 dark:bg-black/25">
-              <input type="file" id="proof-upload" className="hidden" onChange={(e) => setSelectedFile(e.target.files[0])} />
+              <input type="file" accept="image/png,image/jpeg,image/webp" id="proof-upload" className="hidden" onChange={(e) => { setSelectedFile(e.target.files[0]); setProofResult(null); }} />
               <label htmlFor="proof-upload" className="cursor-pointer space-y-2 block">
                 <FileText className="w-10 h-10 text-slate-450 dark:text-slate-650 mx-auto" />
                 <span className="text-xs font-bold uppercase tracking-wider text-[#15BCDF] block">
@@ -138,19 +141,7 @@ export default function FraudProtectionCenter({ addToast }) {
               </button>
             )}
 
-            {proofResult && (
-              <div className={cn("p-4 rounded-lg border text-xs space-y-2", proofResult.fake ? "bg-red-500/10 border-red-500/20 text-red-500" : "bg-emerald-500/10 border-emerald-500/20 text-emerald-500")}>
-                <div className="font-bold uppercase tracking-wider">
-                  Audit Verdict: {proofResult.fake ? 'HIGH-RISK PAYMENT PROOF (EDITED)' : 'COMPATIBLE VERIFICATION PATTERN'}
-                </div>
-                <ul className="list-disc pl-4 space-y-1 font-semibold text-slate-550 dark:text-slate-400">
-                  {proofResult.details.map((d, i) => <li key={i}>{d}</li>)}
-                </ul>
-                <p className="text-[10px] font-bold text-[#6b6f72] dark:text-slate-500 mt-3 italic border-t border-slate-200 dark:border-white/5 pt-2">
-                  "Payment screenshots are not treated as proof of settlement. Final verification depends on server-side transaction confirmation."
-                </p>
-              </div>
-            )}
+            {proofResult && <ProofAnalysisResult analysis={proofResult} />}
           </div>
         )}
 
@@ -217,7 +208,7 @@ export default function FraudProtectionCenter({ addToast }) {
                 {alerts.map((alert, idx) => (
                   <div key={alert._id || idx} className="p-4 bg-slate-100/50 dark:bg-black/25 border border-slate-200 dark:border-white/5 rounded-lg text-xs space-y-1.5">
                     <div className="flex justify-between items-center flex-wrap">
-                      <span className="font-bold text-xs uppercase text-[#2b3033] dark:text-white">Sender: {alert.sender}</span>
+                      <span className="font-bold text-xs uppercase text-[#2b3033] dark:text-white">Sender: {alert.metadata?.sender || 'System'}</span>
                       <span className="text-[9px] uppercase font-bold px-2 py-0.5 rounded-full border bg-red-500/10 text-red-500 border-red-500/20">
                         {alert.riskLevel} Risk
                       </span>
@@ -238,4 +229,47 @@ export default function FraudProtectionCenter({ addToast }) {
 
     </div>
   );
+}
+
+const RESULT_COPY = {
+  VERIFIED_PAYMENT: ['PAYMENT VERIFIED ✓', 'This payment proof matched a trusted transaction for this merchant.', 'verified'],
+  INVALID_PAYMENT_PROOF: ['INVALID PAYMENT PROOF', 'This image does not appear to be a valid digital-payment screenshot. Please upload a payment receipt or payment confirmation screenshot.', 'invalid'],
+  PAYMENT_NOT_FOUND: ['PAYMENT NOT VERIFIED', 'No matching trusted payment record was found for this merchant. Do not accept this screenshot as confirmation of payment.', 'danger'],
+  AMOUNT_MISMATCH: ['PAYMENT MISMATCH ⚠', 'The claimed amount does not match the trusted transaction record.', 'danger'],
+  MERCHANT_MISMATCH: ['MERCHANT MISMATCH ⚠', 'This payment cannot be verified for the currently authenticated merchant.', 'danger'],
+  DUPLICATE_PROOF: ['DUPLICATE PAYMENT PROOF', 'This payment proof has already been checked previously.', 'warning'],
+  UNREADABLE_PAYMENT_PROOF: ['PAYMENT PROOF UNREADABLE', 'TrustPay detected a payment-related image but could not reliably extract enough information to verify it.', 'warning'],
+  PAYMENT_PENDING: ['PAYMENT PENDING', 'The trusted transaction exists but is still pending.', 'warning'],
+  PAYMENT_FAILED: ['PAYMENT FAILED', 'The trusted transaction exists but has failed.', 'danger'],
+};
+
+function ProofAnalysisResult({ analysis }) {
+  const [title, message, tone] = RESULT_COPY[analysis.result] || ['VERIFICATION UNAVAILABLE', analysis.message || 'TrustPay could not verify this payment at this time. Do not rely on the screenshot alone.', 'danger'];
+  const extracted = analysis.extracted || {};
+  const verification = analysis.verification || {};
+  const toneClass = tone === 'verified' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-500' : tone === 'warning' ? 'bg-amber-500/10 border-amber-500/20 text-amber-500' : 'bg-red-500/10 border-red-500/20 text-red-500';
+  const fields = [
+    ['Amount', extracted.claimedAmount != null ? `₹${extracted.claimedAmount}` : null],
+    ['Transaction ID', extracted.transactionId], ['Reference ID', extracted.referenceId || extracted.utr],
+    ['Payment ID', extracted.paymentId], ['Order ID', extracted.orderId], ['Payee', extracted.payee],
+    ['Status', extracted.paymentStatus], ['Date / Time', [extracted.date, extracted.time].filter(Boolean).join(' ') || null],
+    ['Payment Method', extracted.paymentMethod],
+  ].filter(([, value]) => value != null);
+  const yesNo = value => value == null ? 'UNKNOWN' : value ? 'YES' : 'NO';
+
+  return <div className="space-y-4">
+    <div className={cn('p-4 rounded-lg border', toneClass)}><p className="text-sm font-bold uppercase tracking-wider">{title}</p><p className="text-xs font-semibold text-slate-600 dark:text-slate-300 mt-2 leading-relaxed">{message}</p></div>
+    <div className="grid sm:grid-cols-3 gap-3">
+      <AnalysisSection title="Image Analysis" rows={[["Payment proof detected", analysis.paymentProofDetected ? 'YES' : 'NO'], ['OCR confidence', analysis.ocrConfidence != null ? `${analysis.ocrConfidence}%` : 'UNKNOWN']]} />
+      <AnalysisSection title="Backend Verification" rows={[["Matching transaction", yesNo(verification.matchingTransaction)], ['Merchant match', yesNo(verification.merchantMatch)], ['Amount match', yesNo(verification.amountMatch)]]} />
+      <AnalysisSection title="Final Result" rows={[["Status", analysis.result || 'VERIFICATION_UNAVAILABLE']]} />
+    </div>
+    {fields.length > 0 && <div className="p-4 rounded-lg border border-slate-200 dark:border-white/10 bg-slate-50/50 dark:bg-black/20"><p className="text-[9px] font-bold uppercase tracking-widest text-[#15BCDF] mb-3">Extracted Information</p><div className="grid sm:grid-cols-2 gap-3">{fields.map(([label, value]) => <div key={label}><p className="text-[9px] uppercase tracking-wider text-slate-400 font-bold">{label}</p><p className="text-xs text-[#2b3033] dark:text-white font-semibold mt-1 break-all">{value}</p></div>)}</div></div>}
+    {analysis.result === 'AMOUNT_MISMATCH' && <div className="grid grid-cols-2 gap-3 text-xs"><div className="p-3 rounded-lg bg-red-500/10"><span className="text-slate-500">Screenshot Amount</span><strong className="block text-red-500 mt-1">₹{extracted.claimedAmount}</strong></div><div className="p-3 rounded-lg bg-slate-100 dark:bg-black/20"><span className="text-slate-500">Verified Amount</span><strong className="block mt-1">₹{analysis.verifiedAmount}</strong></div></div>}
+    <p className="text-[10px] font-bold text-slate-500 italic">A payment-like image is not proof of settlement. Only a trusted merchant transaction match can produce VERIFIED_PAYMENT.</p>
+  </div>;
+}
+
+function AnalysisSection({ title, rows }) {
+  return <div className="p-3 rounded-lg border border-slate-200 dark:border-white/10 bg-slate-50/50 dark:bg-black/20"><p className="text-[9px] font-bold uppercase tracking-widest text-[#15BCDF] mb-3">{title}</p>{rows.map(([label, value]) => <div key={label} className="mb-2 last:mb-0"><p className="text-[9px] text-slate-400 uppercase font-bold">{label}</p><p className="text-[10px] font-bold text-[#2b3033] dark:text-white mt-0.5 break-all">{value}</p></div>)}</div>;
 }

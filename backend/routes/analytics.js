@@ -1,10 +1,15 @@
 const router  = require('express').Router();
-const Payment = require('../models/Payment');
+const { requireMerchant } = require('../utils/auth');
+const { getMerchantModels } = require('../utils/merchantDb');
 
 // GET /api/analytics — rich metrics for the merchant dashboard
-router.get('/', async (req, res) => {
+router.get('/', requireMerchant, async (req, res) => {
   try {
+    const { Payment, connection } = getMerchantModels(req.user.merchantId);
+    console.info(`Authenticated merchant: ${req.user.merchantId}`);
+    console.info(`Selected database: ${connection.name}`);
     const all        = await Payment.find();
+    console.info(`Transactions returned: ${all.length}`);
     const verified   = all.filter(p => p.status === 'verified');
     const suspicious = all.filter(p => p.status === 'suspicious');
     const pending    = all.filter(p => ['pending', 'unmatched'].includes(p.status));
@@ -14,35 +19,29 @@ router.get('/', async (req, res) => {
     const highestPayment = sorted[0]              || null;
     const lowestPayment  = sorted[sorted.length - 1] || null;
 
-    // Pre-injected realistic hourly pattern (represents a typical business day)
-    // In production you'd aggregate actual DB timestamps by hour
-    const hourlyData = [
-      { hour: '8 AM',  volume: 12 },
-      { hour: '9 AM',  volume: 34 },
-      { hour: '10 AM', volume: 55 },
-      { hour: '11 AM', volume: 72 },
-      { hour: '12 PM', volume: 98 },
-      { hour: '1 PM',  volume: 110 },
-      { hour: '2 PM',  volume: 88 },
-      { hour: '3 PM',  volume: 65 },
-      { hour: '4 PM',  volume: 48 },
-      { hour: '5 PM',  volume: 57 },
-      { hour: '6 PM',  volume: 80 },
-      { hour: '7 PM',  volume: 95 },
-      { hour: '8 PM',  volume: 74 },
-      { hour: '9 PM',  volume: 40 },
-    ];
+    const hourlyData = Array.from({ length: 14 }, (_, index) => {
+      const hour = index + 8;
+      return {
+        hour: new Date(2000, 0, 1, hour).toLocaleTimeString('en-US', { hour: 'numeric' }),
+        volume: all.filter(payment => new Date(payment.time).getHours() === hour).length,
+      };
+    });
 
     res.json({
+      success: true,
       metrics: {
-        total:    all.length + 192,       // + historical base so dashboard isn't empty on fresh DB
-        verified: verified.length + 178,
-        pending:  pending.length + 10,
-        failed:   suspicious.length + 4,
+        revenue: verified.reduce((sum, payment) => sum + payment.amount, 0),
+        total: all.length,
+        totalTransactions: all.length,
+        verified: verified.length,
+        pending: pending.length,
+        failed: suspicious.length,
+        blockedThreats: suspicious.length,
       },
       hourlyData,
       highestPayment,
       lowestPayment,
+      transactions: all,
     });
   } catch (err) {
     console.error('analytics error:', err);

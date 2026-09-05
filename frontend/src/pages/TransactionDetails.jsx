@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { fetchPayments } from '../utils/api';
+import { fetchTransactions } from '../utils/api';
 import { ShieldCheck, ShieldAlert, Clock, ArrowLeft, Lock, Loader2 } from 'lucide-react';
 import { cn } from '../utils/cn';
 
@@ -10,10 +10,10 @@ export default function TransactionDetails() {
   const [payment, setPayment] = useState(null);
 
   useEffect(() => {
-    fetchPayments()
+    fetchTransactions()
       .then(res => {
         if (res.success) {
-          const match = res.payments.find(p => p.txnId === txnId || p._id === txnId);
+          const match = (res.transactions || []).find(p => p.txnId === txnId || p._id === txnId);
           setPayment(match || null);
         }
       })

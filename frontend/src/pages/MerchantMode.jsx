@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import PaymentCard from '../components/PaymentCard';
-import { matchPayment, scanQR, fetchPayments, generateProof } from '../utils/api';
+import { matchPayment, scanQR, fetchTransactions, generateProof, getApiUrl } from '../utils/api';
 import { QrCode, RefreshCw, Inbox, ShieldCheck, IndianRupee, Activity, AlertTriangle, Plus, ClipboardList } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -13,6 +13,7 @@ export default function MerchantMode({ addToast }) {
   const [scanInput, setScanInput] = useState('');
   const [scanning, setScanning] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
 
   // Payment Request fields
   const [reqAmount, setReqAmount] = useState('');
@@ -24,7 +25,8 @@ export default function MerchantMode({ addToast }) {
   useEffect(() => {
     loadFeed();
 
-    const eventSource = new EventSource('http://localhost:5000/api/stream');
+    const accessToken = localStorage.getItem('trustpay_token');
+    const eventSource = new EventSource(`${getApiUrl('/stream')}?accessToken=${encodeURIComponent(accessToken || '')}`);
 
     eventSource.onmessage = (event) => {
       try {
@@ -52,11 +54,18 @@ export default function MerchantMode({ addToast }) {
 
   const loadFeed = async () => {
     try {
-      const res = await fetchPayments();
+      const res = await fetchTransactions();
       if (res.success) {
-        setPayments(res.payments || []);
+        setPayments(res.transactions || []);
+        setLoadError('');
+      } else {
+        setPayments([]);
+        setLoadError(res.message || 'Unable to load transactions.');
       }
-    } catch {}
+    } catch {
+      setPayments([]);
+      setLoadError('Unable to load transactions.');
+    }
     finally { setLoading(false); }
   };
 
@@ -151,8 +160,8 @@ export default function MerchantMode({ addToast }) {
       {/* Metrics Grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { label: "Today's Revenue", value: `₹${totalRevenue.toLocaleString()}`, color: 'text-[#2b3033] dark:text-white', icon: IndianRupee },
-          { label: 'Total Payments', value: payments.length, color: 'text-[#15BCDF]', icon: ClipboardList },
+          { label: 'Revenue', value: `₹${totalRevenue.toLocaleString()}`, color: 'text-[#2b3033] dark:text-white', icon: IndianRupee },
+          { label: 'Transactions', value: payments.length, color: 'text-[#15BCDF]', icon: ClipboardList },
           { label: 'Pending Audits', value: pendingPayments.length, color: 'text-amber-500', icon: Activity },
           { label: 'Blocked Threats', value: suspiciousPayments.length, color: 'text-red-500', icon: AlertTriangle }
         ].map((item, i) => (
@@ -174,8 +183,10 @@ export default function MerchantMode({ addToast }) {
 
         {loading ? (
           <div className="py-12 text-center text-slate-500">Checking for logs...</div>
+        ) : loadError ? (
+          <div className={`${card} py-16 text-center text-red-500`}>{loadError}</div>
         ) : payments.length === 0 ? (
-          <div className={`${card} py-16 text-center text-slate-500 italic`}>No merchant ledger activities registered yet.</div>
+          <div className={`${card} py-16 text-center text-slate-500 italic`}>No transactions yet.</div>
         ) : (
           <div className="space-y-3">
             {payments.map(p => (

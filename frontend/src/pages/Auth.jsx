@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
 import { ArrowRight, Check, ChevronDown, Fingerprint, LockKeyhole, Menu, Play, ShieldCheck, Sparkles, Sun, Moon, UserRound, X, Zap } from 'lucide-react';
-import { login, signup, sendOtp, verifyOtp, googleLogin } from '../utils/api';
+import { login, signup, sendOtp, verifyOtp, googleLogin, completeAuthOnboarding } from '../utils/api';
+import { Link } from 'react-router-dom';
 
 const HERO_VIDEO = 'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260823_050407_500d0339-ab28-41c1-9688-132a74a3b5aa.mp4';
 const ABOUT_VIDEO = 'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260823_063501_2e2c8971-de1e-473a-8611-a0c9ae7ee186.mp4';
@@ -30,10 +31,10 @@ export default function Auth({ setUser, addToast, theme, toggleTheme }) {
   const [otpSent, setOtpSent] = useState(false);
   const [otp, setOtp] = useState('');
   const [loading, setLoading] = useState(false);
-  const [googleModal, setGoogleModal] = useState(false);
-  
-  const [google, setGoogle] = useState({ name: '', email: '' });
-  const [form, setForm] = useState({ name: '', email: '', password: '', role: 'user', phoneNumber: '' });
+  const [authError, setAuthError] = useState('');
+  const [statusText, setStatusText] = useState('');
+  const [onboarding, setOnboarding] = useState(null);
+  const [form, setForm] = useState({ name: '', email: '', password: '', role: 'user', phoneNumber: '', businessName: '', upiId: '' });
   
   const heroVideoRef = useRef(null);
   const aboutVideoRef = useRef(null);
@@ -72,21 +73,27 @@ export default function Auth({ setUser, addToast, theme, toggleTheme }) {
   }, []);
 
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
-  const openAuth = (v = true) => { setIsLogin(v); setModal(true); setMobile(false); };
+  const openAuth = (v = true) => { setIsLogin(v); setModal(true); setMobile(false); setAuthError(''); setOnboarding(null); };
+  const openRole = role => { set('role', role); openAuth(true); };
 
   const sendCode = async () => {
     if (!form.phoneNumber.trim()) return addToast('Enter your phone number', 'error');
     setLoading(true);
+    setAuthError('');
+    setStatusText('Sending secure code...');
     try {
-      const r = await sendOtp(form.phoneNumber);
+      const r = await sendOtp(form.phoneNumber, form.role);
       if (r.success) {
         setOtpSent(true);
-        addToast(`OTP sent. Demo code: ${r.otp}`, 'success');
+        setStatusText(`Code sent to ${r.phoneNumber}`);
+        addToast('Secure code sent', 'success');
       } else {
-        addToast(r.message || 'Could not send OTP', 'error');
+        setAuthError(r.message || 'We could not send the verification code. Please try again.');
+        setStatusText('');
       }
     } catch {
-      addToast('Cannot connect to the server.', 'error');
+      setAuthError('Cannot connect to TrustPay server.');
+      setStatusText('');
     } finally {
       setLoading(false);
     }
@@ -95,49 +102,92 @@ export default function Auth({ setUser, addToast, theme, toggleTheme }) {
   const submit = async e => {
     e.preventDefault();
     setLoading(true);
+    setAuthError('');
     try {
       let r;
-      if (isLogin && method === 'phone') {
+      if (onboarding) {
+        r = await completeAuthOnboarding({ onboardingToken: onboarding.token, name: form.name, email: form.email, password: form.password, merchantName: form.name, businessName: form.businessName, upiId: form.upiId });
+      } else if (method === 'phone') {
         if (!otpSent) {
           setLoading(false);
           return sendCode();
         }
+        setStatusText('Verifying...');
         r = await verifyOtp(form.phoneNumber, otp, form.role);
       } else if (isLogin) {
-        r = await login(form.email, form.password);
+        setStatusText('Signing in...');
+        r = await login(form.email, form.password, form.role);
       } else {
-        r = await signup(form.name, form.email, form.password, form.role, form.phoneNumber);
+        r = await signup(form.name, form.email, form.password, form.role, form.phoneNumber, form.businessName, form.upiId);
       }
-      
-      if (r.success) {
+
+      if (r.success && (r.requiresProfileCompletion || r.requiresMerchantOnboarding)) {
+        setOnboarding({ token: r.onboardingToken, merchant: Boolean(r.requiresMerchantOnboarding), provider: 'phone' });
+        setStatusText('Identity verified. Complete your profile.');
+      } else if (r.success && r.user) {
         addToast(`Welcome${r.user?.name ? `, ${r.user.name}` : ''}!`, 'success');
         setUser(r.user);
       } else {
-        addToast(r.message || 'Authentication failed', 'error');
+        setAuthError(r.message || 'Authentication failed');
+        setStatusText('');
       }
     } catch {
-      addToast('Cannot connect to the server. Make sure the backend is running.', 'error');
+      setAuthError('Cannot connect to TrustPay server.');
+      setStatusText('');
     } finally {
       setLoading(false);
     }
   };
 
-  const googleSubmit = async e => {
-    e.preventDefault();
+  const finishGoogleLogin = async credential => {
     setLoading(true);
+    setAuthError('');
+    setStatusText('Connecting to Google...');
     try {
-      const r = await googleLogin(google.email, google.name, form.role);
-      if (r.success) {
+      const invitationToken = sessionStorage.getItem('trustpay_guardian_invitation') || undefined;
+      const r = await googleLogin(credential, form.role, invitationToken);
+      if (r.success && r.requiresMerchantOnboarding) {
+        const encodedClaims = credential.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+        const claims = JSON.parse(atob(encodedClaims.padEnd(Math.ceil(encodedClaims.length / 4) * 4, '=')));
+        setForm(current => ({ ...current, name: claims.name || '', email: claims.email || '' }));
+        setOnboarding({ token: r.onboardingToken, merchant: true, provider: 'google' });
+        setStatusText('Google identity verified. Complete merchant onboarding.');
+      } else if (r.success && r.user) {
+        if (r.guardianInvitationAccepted) sessionStorage.removeItem('trustpay_guardian_invitation');
         setUser(r.user);
         addToast(`Welcome, ${r.user.name}!`, 'success');
       } else {
-        addToast(r.message || 'Google sign-in failed', 'error');
+        setAuthError(r.message || 'Google sign-in could not be verified.');
+        setStatusText('');
       }
     } catch {
-      addToast('Cannot connect to the server.', 'error');
+      setAuthError('Google sign-in could not be verified.');
+      setStatusText('');
     } finally {
       setLoading(false);
     }
+  };
+
+  const startGoogleLogin = () => {
+    setAuthError('');
+    const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+    if (!clientId) return setAuthError('Google sign-in is not configured.');
+    const launch = () => {
+      window.google.accounts.id.initialize({ client_id: clientId, callback: response => finishGoogleLogin(response.credential) });
+      setLoading(true);
+      setStatusText('Connecting to Google...');
+      window.google.accounts.id.prompt(notification => {
+        if (notification.isNotDisplayed?.() || notification.isSkippedMoment?.()) {
+          setLoading(false); setStatusText(''); setAuthError('Google sign-in could not be opened. Check browser popup and third-party cookie settings.');
+        }
+      });
+    };
+    if (window.google?.accounts?.id) return launch();
+    const script = document.createElement('script');
+    script.src = 'https://accounts.google.com/gsi/client'; script.async = true; script.defer = true;
+    script.onload = launch;
+    script.onerror = () => { setLoading(false); setStatusText(''); setAuthError('Google sign-in could not be loaded.'); };
+    document.head.appendChild(script);
   };
 
   const inputCls = 'w-full rounded-xl border border-slate-300 dark:border-white/10 bg-white/60 dark:bg-white/[.055] px-4 py-3.5 text-sm text-[#2b3033] dark:text-white outline-none placeholder:text-slate-500 focus:border-[#15BCDF] focus:ring-2 focus:ring-[#15BCDF]/20 transition-all';
@@ -239,6 +289,11 @@ export default function Auth({ setUser, addToast, theme, toggleTheme }) {
                 GET STARTED
                 <span className="w-6 h-px bg-[#1a1c1e] group-hover:w-8 transition-all" />
               </button>
+              <div className="mt-4 grid max-w-xl grid-cols-1 gap-2 sm:grid-cols-3">
+                <Link to="/user" className="rounded-lg border border-[#15BCDF]/40 bg-[#15BCDF]/10 px-4 py-3 text-center text-[10px] font-black uppercase tracking-wider text-[#15BCDF]">User Safety</Link>
+                <button onClick={() => openRole('merchant')} className="rounded-lg border border-slate-300 dark:border-white/10 px-4 py-3 text-[10px] font-black uppercase tracking-wider">Merchant</button>
+                <Link to="/guardian/login" className="rounded-lg border border-slate-300 dark:border-white/10 px-4 py-3 text-center text-[10px] font-black uppercase tracking-wider">Guardian</Link>
+              </div>
             </div>
 
           </motion.div>
@@ -250,15 +305,14 @@ export default function Auth({ setUser, addToast, theme, toggleTheme }) {
           {/* Left Column */}
           <div className="flex-1 min-w-[300px] max-w-[520px] z-10">
             
-            {/* Staircase H2 */}
             <h2 className="text-[clamp(34px,6.5vw,72px)] font-bold leading-[0.98] uppercase tracking-wide text-[#2b3033] dark:text-white">
-              ABOUT<br/>
-              <span className="block pl-[min(160px,18vw)] text-[#15BCDF]">BUSINESS</span>
+              BANK-GRADE<br/>
+              <span className="block pl-[min(160px,18vw)] text-[#15BCDF]">SECURITY</span>
             </h2>
 
             {/* Copy verbatim */}
             <p className="mt-[32px] ml-[min(160px,18vw)] text-[clamp(14px,1.6vw,17px)] line-height-[1.7] text-[#6b6f72] dark:text-slate-350 font-medium">
-              Targo builds the testing infrastructure modern teams rely on. From automated pipelines to full-scale QA audits, we make sure your software ships fast and breaks nothing. Hundreds of releases, zero surprises.
+              TrustPay secures every transaction with military-grade encryption and real-time fraud detection. Your peace of mind is our top priority, ensuring safe, seamless, and transparent payments every time.
             </p>
 
             {/* Learn More Button */}
@@ -309,15 +363,15 @@ export default function Auth({ setUser, addToast, theme, toggleTheme }) {
                 </h2>
               </div>
               <p className="max-w-lg text-sm leading-relaxed text-[#6b6f72] dark:text-slate-450 lg:justify-self-end font-medium">
-                TrustPay combines QR cryptography, text threat analysis, live API confirmations, and family guard features inside one central Payment Trust Engine.
+                TrustPay combines QR verification, text threat analysis, live payment confirmations, and linked Guardian alerts inside one central Payment Trust Engine.
               </p>
             </div>
             
             <div className="grid gap-6 md:grid-cols-12">
-              <Feature wide n="01" icon={Fingerprint} title="PAYMENT PROOF ANALYZER" text="Analyze digital screenshots and transactions to check font consistency and editing artifacts in second-level canvas forensics."/>
-              <Feature n="02" icon={Zap} title="LIVE MATCH ENGINE" text="Simulated server logs confirm settlement status before authorizing item exchanges."/>
-              <Feature n="03" icon={UserRound} title="GUARDIAN PROTECTION" text="Require family approval filters on elderly accounts for transaction limit triggers."/>
-              <Feature wide n="04" icon={Sparkles} title="TRANSACTION REGISTRY" text="Generate dynamic HMAC time-locked QR codes to maintain structural receipt hashes securely."/>
+              <Feature onClick={() => { openAuth(true); addToast('Please sign in to access this feature', 'info'); }} wide n="01" icon={Fingerprint} title="PAYMENT PROOF ANALYZER" text="Analyze digital screenshots and transactions to check font consistency and editing artifacts in second-level canvas forensics."/>
+              <Feature onClick={() => { openAuth(true); addToast('Please sign in to access this feature', 'info'); }} n="02" icon={Zap} title="LIVE MATCH ENGINE" text="Simulated server logs confirm settlement status before authorizing item exchanges."/>
+              <Feature onClick={() => { openAuth(true); addToast('Please sign in to access this feature', 'info'); }} n="03" icon={UserRound} title="GUARDIAN PROTECTION" text="Share HIGH and CRITICAL TrustPay safety alerts with a trusted linked Guardian."/>
+              <Feature onClick={() => { openAuth(true); addToast('Please sign in to access this feature', 'info'); }} wide n="04" icon={Sparkles} title="TRANSACTION REGISTRY" text="Generate dynamic HMAC time-locked QR codes to maintain structural receipt hashes securely."/>
             </div>
           </motion.div>
         </section>
@@ -351,7 +405,6 @@ export default function Auth({ setUser, addToast, theme, toggleTheme }) {
           <div className="flex gap-6 items-center">
             <a href="#security" className="hover:text-[#15BCDF] transition-colors">Security</a>
             <button onClick={() => openAuth(true)} className="hover:text-[#15BCDF] transition-colors uppercase font-bold text-xs">Sign in</button>
-            <a href="/family" className="hover:text-[#15BCDF] transition-colors">Family portal</a>
           </div>
         </div>
       </footer>
@@ -376,13 +429,13 @@ export default function Auth({ setUser, addToast, theme, toggleTheme }) {
               
               <div className="mt-6 grid grid-cols-3 rounded-lg bg-slate-200 dark:bg-white/5 p-1 text-xs font-bold uppercase tracking-wider">
                 {['user', 'merchant', 'guardian'].map(r => (
-                  <button key={r} type="button" onClick={() => set('role', r)} className={`rounded-md py-2.5 transition-all ${form.role === r ? 'bg-[#15BCDF] text-white' : 'text-slate-500 hover:text-slate-750 dark:hover:text-slate-200'}`}>
+                  <button key={r} type="button" onClick={() => { set('role', r); setOtpSent(false); setOtp(''); setOnboarding(null); setAuthError(''); }} className={`rounded-md py-2.5 transition-all ${form.role === r ? 'bg-[#15BCDF] text-white' : 'text-slate-500 hover:text-slate-750 dark:hover:text-slate-200'}`}>
                     {r}
                   </button>
                 ))}
               </div>
               
-              {isLogin && (
+              {!onboarding && (
                 <div className="mt-4 flex gap-4 border-b border-slate-200 dark:border-white/10 text-[10px] font-bold uppercase tracking-wider">
                   <button type="button" onClick={() => setMethod('email')} className={`pb-2.5 transition-all ${method === 'email' ? 'border-b-2 border-[#15BCDF] text-[#15BCDF]' : 'text-slate-500'}`}>Email</button>
                   <button type="button" onClick={() => setMethod('phone')} className={`pb-2.5 transition-all ${method === 'phone' ? 'border-b-2 border-[#15BCDF] text-[#15BCDF]' : 'text-slate-500'}`}>Phone OTP</button>
@@ -390,18 +443,25 @@ export default function Auth({ setUser, addToast, theme, toggleTheme }) {
               )}
               
               <form onSubmit={submit} className="mt-5 space-y-4">
-                {!isLogin && (
+                {(!isLogin || onboarding) && (
                   <input required className={inputCls} placeholder="Full Name" value={form.name} onChange={e => set('name', e.target.value)}/>
                 )}
-                
-                {(!isLogin || method === 'email') && (
+
+                {(onboarding?.merchant || (!isLogin && form.role === 'merchant')) && (
                   <>
-                    <input required type="email" autoComplete="email" className={inputCls} placeholder="Email address" value={form.email} onChange={e => set('email', e.target.value)}/>
-                    <input required type="password" autoComplete={isLogin ? 'current-password' : 'new-password'} minLength={6} className={inputCls} placeholder="Password" value={form.password} onChange={e => set('password', e.target.value)}/>
+                    <input required className={inputCls} placeholder="Business Name" value={form.businessName} onChange={e => set('businessName', e.target.value)}/>
+                    <input className={inputCls} placeholder="UPI ID (optional)" value={form.upiId} onChange={e => set('upiId', e.target.value)}/>
                   </>
                 )}
-                
-                {isLogin && method === 'phone' && (
+
+                {(onboarding || method === 'email') && (
+                  <>
+                    <input required type="email" autoComplete="email" className={inputCls} placeholder="Email address" value={form.email} onChange={e => set('email', e.target.value)}/>
+                    <input required={!onboarding || onboarding.provider === 'phone'} type="password" autoComplete={isLogin ? 'current-password' : 'new-password'} minLength={6} className={inputCls} placeholder={onboarding?.provider === 'google' ? 'Password (optional for Google)' : 'Password'} value={form.password} onChange={e => set('password', e.target.value)}/>
+                  </>
+                )}
+
+                {!onboarding && method === 'phone' && (
                   <>
                     <input required type="tel" className={inputCls} placeholder="Phone number" value={form.phoneNumber} onChange={e => set('phoneNumber', e.target.value)}/>
                     {otpSent && (
@@ -409,9 +469,12 @@ export default function Auth({ setUser, addToast, theme, toggleTheme }) {
                     )}
                   </>
                 )}
-                
+
+                {authError && <p role="alert" className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2.5 text-xs font-medium text-red-600 dark:text-red-300">{authError}</p>}
+                {statusText && !authError && <p aria-live="polite" className="text-center text-xs font-medium text-[#15BCDF]">{statusText}</p>}
+
                 <button disabled={loading} className="btn-chamfered flex w-full items-center justify-center gap-2 bg-[#15BCDF] hover:bg-[#3fd0ef] border border-[#0fa3c2] py-4 text-xs font-bold uppercase tracking-wider text-[#111] disabled:opacity-50 transition-all">
-                  {loading ? 'Processing...' : isLogin ? (method === 'phone' && !otpSent ? 'Send Secure Code' : 'Sign in') : 'Create Profile'}
+                  {loading ? (method === 'phone' ? (otpSent ? 'Verifying...' : 'Sending secure code...') : 'Signing in...') : onboarding ? (onboarding.merchant ? 'Complete Merchant Profile' : 'Complete Profile') : method === 'phone' ? (otpSent ? 'Verify & Login' : 'Send Secure Code') : isLogin ? 'Sign in' : 'Create Profile'}
                   <ArrowRight className="h-4 w-4"/>
                 </button>
               </form>
@@ -420,8 +483,8 @@ export default function Auth({ setUser, addToast, theme, toggleTheme }) {
                 <span className="h-px flex-1 bg-slate-300 dark:bg-white/10"/>or<span className="h-px flex-1 bg-slate-300 dark:bg-white/10"/>
               </div>
               
-              <button onClick={() => setGoogleModal(true)} className="flex w-full items-center justify-center gap-3 rounded-lg border border-slate-355 dark:border-white/10 py-3.5 text-xs font-bold uppercase tracking-wider hover:bg-slate-200 dark:hover:bg-white/5 transition-all text-[#2b3033] dark:text-white">
-                <GoogleIcon/>Continue with Google
+              <button disabled={loading} onClick={startGoogleLogin} className="flex w-full items-center justify-center gap-3 rounded-lg border border-slate-355 dark:border-white/10 py-3.5 text-xs font-bold uppercase tracking-wider hover:bg-slate-200 dark:hover:bg-white/5 transition-all text-[#2b3033] dark:text-white disabled:opacity-50">
+                <GoogleIcon/>{loading && statusText === 'Connecting to Google...' ? 'Connecting to Google...' : 'Continue with Google'}
               </button>
               
               <p className="mt-6 text-center text-xs font-bold uppercase tracking-wider text-slate-500">
@@ -433,38 +496,13 @@ export default function Auth({ setUser, addToast, theme, toggleTheme }) {
         )}
       </AnimatePresence>
       
-      {/* Google Sign in simulation */}
-      <AnimatePresence>
-        {googleModal && (
-          <div className="fixed inset-0 z-[120] grid place-items-center bg-black/60 p-4 backdrop-blur-md">
-            <motion.form onSubmit={googleSubmit} initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} className="w-full max-w-sm rounded-xl border border-slate-300 dark:border-white/10 bg-[#F2F1F0] dark:bg-[#1a1c1e] p-7 text-[#2b3033] dark:text-white">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <GoogleIcon/>
-                  <h3 className="text-sm font-bold uppercase tracking-wider">Authorize Profile</h3>
-                </div>
-                <button type="button" onClick={() => setGoogleModal(false)} className="text-slate-400 hover:text-slate-600"><X/></button>
-              </div>
-              <p className="mt-3 text-xs text-[#6b6f72] dark:text-slate-400 font-medium">Demo sign-in: enter the Google credentials you want to use.</p>
-              <div className="mt-6 space-y-4">
-                <input required className={inputCls} placeholder="Name" value={google.name} onChange={e => setGoogle({ ...google, name: e.target.value })}/>
-                <input required type="email" className={inputCls} placeholder="Google email" value={google.email} onChange={e => setGoogle({ ...google, email: e.target.value })}/>
-                <button disabled={loading} className="w-full rounded-lg bg-[#15BCDF] hover:bg-[#3fd0ef] py-3.5 text-xs font-bold uppercase tracking-wider text-[#111] transition-all">
-                  Authorize Sync
-                </button>
-              </div>
-            </motion.form>
-          </div>
-        )}
-      </AnimatePresence>
-      
     </div>
   );
 }
 
-function Feature({ n, icon: Icon, title, text, wide }) {
+function Feature({ n, icon: Icon, title, text, wide, onClick }) {
   return (
-    <motion.article {...reveal} className={`${wide ? 'md:col-span-7' : 'md:col-span-5'} group min-h-[300px] rounded-xl border border-slate-300 dark:border-white/10 bg-white/60 dark:bg-[#1a1c1e] p-8 hover:border-[#15BCDF] dark:hover:border-[#15BCDF]/60 transition-all duration-300 flex flex-col justify-between shadow-sm hover:shadow-md`}>
+    <motion.article onClick={onClick} {...reveal} className={`${wide ? 'md:col-span-7' : 'md:col-span-5'} ${onClick ? 'cursor-pointer' : ''} group min-h-[300px] rounded-xl border border-slate-300 dark:border-white/10 bg-white/60 dark:bg-[#1a1c1e] p-8 hover:border-[#15BCDF] dark:hover:border-[#15BCDF]/60 transition-all duration-300 flex flex-col justify-between shadow-sm hover:shadow-md`}>
       <div className="flex justify-between items-start">
         <span className="text-xs font-bold text-[#15BCDF]">{n}</span>
         <span className="grid h-12 w-12 place-items-center rounded-lg bg-[#15BCDF]/10 text-[#15BCDF] group-hover:scale-105 transition-transform"><Icon/></span>

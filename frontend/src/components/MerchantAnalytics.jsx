@@ -20,6 +20,7 @@ export default function MerchantAnalytics({ addToast }) {
   const loadAnalytics = async () => {
     try {
       const res = await fetchAnalytics();
+      if (!res.success) throw new Error(res.message || 'Failed to load analytics');
       setData(res);
     } catch (err) {
       addToast('Failed to load analytics data', 'error');
@@ -51,7 +52,7 @@ export default function MerchantAnalytics({ addToast }) {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-6 border-b border-white/20 gap-4 sm:gap-0">
         <div>
           <h2 className="text-2xl font-black text-slate-800 dark:text-slate-100 tracking-tight">System <span className="neon-text">Overview</span></h2>
-          <p className="text-sm text-cyber-cyan font-mono mt-1 tracking-wider">Metrics trending +23% upward</p>
+          <p className="text-sm text-cyber-cyan font-mono mt-1 tracking-wider">Authenticated merchant metrics</p>
         </div>
         <button 
           onClick={() => setShowReport(true)}

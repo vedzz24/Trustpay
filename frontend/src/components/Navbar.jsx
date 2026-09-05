@@ -1,6 +1,6 @@
 import { NavLink } from 'react-router-dom';
 /* eslint-disable react/prop-types */
-import { LayoutDashboard, BarChart3, Shield, LogOut, Sun, Moon, Menu, X, ShieldCheck, BookOpen, Lock } from 'lucide-react';
+import { LayoutDashboard, BarChart3, Shield, LogOut, Sun, Moon, Menu, X, ShieldCheck, BookOpen, Lock, QrCode, ClipboardList, Users, Bell } from 'lucide-react';
 import { useState } from 'react';
 import { cn } from '../utils/cn';
 
@@ -12,18 +12,24 @@ export default function Navbar({ user, logout, theme, toggleTheme }) {
   const isGuardian = user.role === 'guardian';
 
   // Desktop Navbar Links
-  const links = [
-    { to: '/',           label: 'Home',  Icon: LayoutDashboard },
-    ...(isMerchant ? [
-      { to: '/analytics', label: 'Merchant Insights', Icon: BarChart3 }
-    ] : []),
-    ...(!isMerchant && !isGuardian ? [
-      { to: '/safe',    label: 'Guardian Mode',  Icon: Shield },
-    ] : []),
-    { to: '/fraud',      label: 'Fraud Center',   Icon: ShieldCheck },
-    { to: '/security',   label: 'Security Center',Icon: Lock },
-    { to: '/blog',       label: 'About',          Icon: BookOpen }
-  ];
+  const links = isMerchant ? [
+      { to: '/', label: 'Home', Icon: LayoutDashboard },
+      { to: '/analytics', label: 'Merchant Insights', Icon: BarChart3 },
+      { to: '/merchant/qr', label: 'My QR', Icon: QrCode },
+      { to: '/fraud', label: 'Fraud Center', Icon: ShieldCheck },
+      { to: '/security', label: 'Security Center', Icon: Lock },
+      { to: '/blog', label: 'About', Icon: BookOpen },
+    ] : isGuardian ? [
+      { to: '/guardian/dashboard', label: 'Guardian Dashboard', Icon: LayoutDashboard },
+      { to: '/guardian/protected-users', label: 'Protected Users', Icon: Users },
+      { to: '/guardian/alerts', label: 'Alerts', Icon: Bell },
+      { to: '/guardian/about', label: 'About', Icon: BookOpen },
+    ] : [
+      { to: '/user', label: 'Safety Hub', Icon: ShieldCheck },
+      { to: '/user/dashboard', label: 'My Checks', Icon: ClipboardList },
+      { to: '/user/guardian', label: 'Guardian Requests', Icon: Shield },
+      { to: '/blog', label: 'About', Icon: BookOpen },
+    ];
 
   const baseLink = 'relative flex items-center gap-2 text-xs font-bold uppercase tracking-wider px-3 py-2 rounded-lg transition-all overflow-hidden group';
   const activeLink   = 'text-[#15BCDF] dark:text-[#15BCDF] bg-[#15BCDF]/10';

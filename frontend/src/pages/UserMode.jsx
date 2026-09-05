@@ -95,7 +95,7 @@ export default function UserMode({ addToast, user }) {
                   GUARDIAN MODE
                   <ArrowRight className="w-4 h-4 text-slate-400 group-hover:translate-x-1 transition-transform" />
                 </h3>
-                <p className="text-[10px] text-[#6b6f72] dark:text-slate-450 mt-1 font-semibold">Configure alert limits requiring family approvals.</p>
+                <p className="text-[10px] text-[#6b6f72] dark:text-slate-450 mt-1 font-semibold">Link a trusted Guardian for HIGH and CRITICAL TrustPay safety alerts.</p>
               </div>
             </Link>
 
