@@ -259,39 +259,25 @@ export default function Auth({ setUser, addToast, theme, toggleTheme }) {
         {/* Section 1 — Hero */}
         <section className="relative flex flex-col md:flex-row md:items-end justify-center md:justify-between min-h-[100svh] overflow-hidden px-4 sm:px-6 md:px-12 pt-16 md:pt-32 pb-8 md:pb-24 bg-[#F2F1F0] dark:bg-[#111] gap-4 sm:gap-6 md:gap-0">
           
-          {/* Desktop Background Video — Exactly as designed for desktop */}
-          <video 
-            ref={heroVideoRef}
-            className="hidden md:block absolute top-0 right-[-10%] w-[99%] h-auto object-contain pointer-events-none z-0 opacity-80 mix-blend-multiply dark:mix-blend-normal"
-            autoPlay 
-            muted 
-            loop 
-            playsInline
-            preload="auto"
-          >
-            <source src={HERO_VIDEO} type="video/mp4"/>
-          </video>
-
           {/* Desktop Left Scrim */}
           <div className="hidden md:block absolute inset-0 left-0 w-[70%] bg-gradient-to-r from-[#F2F1F0] via-[#F2F1F0] to-transparent dark:from-[#111] dark:via-[#111] z-10 pointer-events-none" />
-          
-          {/* Mobile Hero Visual — Centered, feather-edged, naturally scaled */}
-          <div className="md:hidden w-full flex justify-center items-center z-10 my-1">
-            <div className="relative w-full max-w-[270px] sm:max-w-[340px] overflow-hidden rounded-2xl">
-              <video 
-                className="w-full h-auto object-contain pointer-events-none opacity-85 dark:opacity-90 mix-blend-multiply dark:mix-blend-normal"
-                autoPlay 
-                muted 
-                loop 
-                playsInline
-                preload="auto"
-              >
-                <source src={HERO_VIDEO} type="video/mp4"/>
-              </video>
-              <div className="absolute inset-0 bg-gradient-to-t from-[#F2F1F0] via-transparent to-transparent dark:from-[#111] dark:via-transparent dark:to-transparent pointer-events-none" />
-              <div className="absolute inset-0 bg-gradient-to-b from-[#F2F1F0] via-transparent to-transparent dark:from-[#111] dark:via-transparent dark:to-transparent pointer-events-none" />
-              <div className="absolute inset-0 bg-gradient-to-r from-[#F2F1F0] via-transparent to-[#F2F1F0] dark:from-[#111] dark:via-transparent dark:to-[#111] pointer-events-none" />
-            </div>
+
+          {/* Background Video — Centered on mobile, absolute top-right on desktop */}
+          <div className="relative md:absolute top-0 right-0 md:right-[-10%] w-full max-w-[280px] sm:max-w-[340px] md:max-w-none md:w-[99%] mx-auto md:mx-0 z-0 pointer-events-none overflow-hidden md:overflow-visible rounded-2xl md:rounded-none my-1 md:my-0">
+            <video 
+              ref={heroVideoRef}
+              className="w-full h-auto object-contain opacity-85 dark:opacity-90 mix-blend-multiply dark:mix-blend-normal"
+              autoPlay 
+              muted 
+              loop 
+              playsInline
+              preload="auto"
+            >
+              <source src={HERO_VIDEO} type="video/mp4"/>
+            </video>
+            {/* Soft edge fades for mobile */}
+            <div className="absolute inset-0 bg-gradient-to-t from-[#F2F1F0]/80 via-transparent to-transparent dark:from-[#111]/80 dark:via-transparent dark:to-transparent pointer-events-none md:hidden" />
+            <div className="absolute inset-0 bg-gradient-to-r from-[#F2F1F0]/80 via-transparent to-[#F2F1F0]/80 dark:from-[#111]/80 dark:via-transparent dark:to-[#111]/80 pointer-events-none md:hidden" />
           </div>
 
           <motion.div style={{ y: heroY, opacity: heroOpacity }} className="relative z-20 mx-auto md:mx-0 w-full max-w-7xl pt-1 md:pt-0">
