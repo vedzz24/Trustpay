@@ -24,6 +24,7 @@ const LoginOtp = require('./models/LoginOtp');
 const GuardianAlert = require('./models/GuardianAlert');
 const { migrateLoginOtpExpiresAtIndex, migrateGuardianLinks } = require('./utils/indexMigrations');
 const { isDevelopmentOrigin } = require('./utils/corsOrigins');
+const { getStatus: getEmailStatus } = require('./services/email');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -104,7 +105,11 @@ app.get('/', (req, res) => {
 });
 
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', service: 'TrustPay API' });
+  res.json({
+    status: 'ok',
+    service: 'TrustPay API',
+    email: getEmailStatus()
+  });
 });
 
 // ── 404 handler ───────────────────────────────────────────────────────────────

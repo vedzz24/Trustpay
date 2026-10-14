@@ -2,7 +2,7 @@ import { normalizeLoginResponse, resolveApiBaseUrl } from './apiConfig';
 
 export function resolveApiBase() {
   return resolveApiBaseUrl({
-    apiBaseUrl: import.meta.env.VITE_API_BASE_URL,
+    apiBaseUrl: import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL,
     fallbackUrl: import.meta.env.DEV ? 'http://localhost:5000' : '',
   });
 }
