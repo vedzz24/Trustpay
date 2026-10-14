@@ -5,19 +5,21 @@ const templates = require('../services/emailTemplates');
 process.env.PUBLIC_APP_URL = 'https://trustpay.example';
 
 const cases = [
-  ['user', templates.buildUserWelcomeEmail({ name: 'Aarav Sharma', email: 'aarav@example.com' }), 'Welcome to TrustPay — Your account is ready', '/user/dashboard'],
-  ['merchant', templates.buildMerchantWelcomeEmail({ merchantName: 'Vedant', businessName: 'Vedant Electronics', merchantId: 'MER001', upiId: 'mer001@trustpay' }), 'Welcome to TrustPay Merchant — Your merchant account is ready', '/'],
-  ['invitation', templates.buildGuardianInvitationEmail({ invitationUrl: 'https://trustpay.example/guardian/accept/safe-token' }), 'You’ve been invited to become a TrustPay Guardian', '/guardian/accept/safe-token'],
+  ['user', templates.buildUserWelcomeEmail({ name: 'Aarav Sharma', email: 'aarav@example.com' }), 'Welcome to GuardX — Your account is ready', '/user/dashboard'],
+  ['merchant', templates.buildMerchantWelcomeEmail({ merchantName: 'Vedant', businessName: 'Vedant Electronics', merchantId: 'MER001', upiId: 'mer001@trustpay' }), 'Welcome to GuardX Merchant — Your merchant account is ready', '/'],
+  ['guardian welcome', templates.buildGuardianWelcomeEmail({ name: 'Priya', email: 'priya@example.com' }), 'Welcome to GuardX Guardian Protection — Account Ready', '/guardian/dashboard'],
+  ['login notification', templates.buildLoginNotificationEmail({ name: 'Aarav', email: 'aarav@example.com', role: 'user', ipAddress: '127.0.0.1' }), 'GuardX Security Alert — New sign-in to your User account', '/user/dashboard'],
+  ['invitation', templates.buildGuardianInvitationEmail({ invitationUrl: 'https://trustpay.example/guardian/accept/safe-token' }), 'You’ve been invited to become a GuardX Guardian', '/guardian/accept/safe-token'],
   ['accepted', templates.buildGuardianAcceptedEmail({ userName: 'Aarav', guardianName: 'Rahul', guardianEmail: 'rahul@example.com', audience: 'user' }), 'Guardian Protection is now active', '/user/guardian'],
-  ['high alert', templates.buildGuardianRiskAlertEmail({ riskLevel: 'HIGH', checkType: 'SCAM MESSAGE', reasons: ['Urgency'] }), 'TrustPay Security Alert — High-risk activity detected', '/guardian/alerts'],
-  ['critical alert', templates.buildGuardianRiskAlertEmail({ riskLevel: 'CRITICAL', checkType: 'OTP SCAM CHECK', reasons: ['OTP sharing request'] }), 'TrustPay Security Alert — Critical-risk activity detected', '/guardian/alerts'],
-  ['removed', templates.buildGuardianRemovedEmail(), 'TrustPay Guardian Protection has been removed', null],
+  ['high alert', templates.buildGuardianRiskAlertEmail({ riskLevel: 'HIGH', checkType: 'SCAM MESSAGE', reasons: ['Urgency'] }), 'GuardX Security Alert — High-risk activity detected', '/guardian/alerts'],
+  ['critical alert', templates.buildGuardianRiskAlertEmail({ riskLevel: 'CRITICAL', checkType: 'OTP SCAM CHECK', reasons: ['OTP sharing request'] }), 'GuardX Security Alert — Critical-risk activity detected', '/guardian/alerts'],
+  ['removed', templates.buildGuardianRemovedEmail(), 'GuardX Guardian Protection has been removed', null],
 ];
 
 for (const [name, email, subject, path] of cases) {
   test(`${name} template has branded HTML, text fallback and expected subject`, () => {
     assert.equal(email.subject, subject);
-    assert.match(email.html, /TRUSTPAY/);
+    assert.match(email.html, /GUARDX/);
     assert.match(email.html, /Secure\. Verify\. Protect\./);
     assert.match(email.html, /width=device-width/);
     assert.match(email.html, /This is an automated account or security notification/);

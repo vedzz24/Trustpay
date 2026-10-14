@@ -21,6 +21,7 @@ const userGuardianRoutes = require('./routes/userGuardian');
 const { sseHandler } = require('./utils/sse');
 const { requireMerchant } = require('./utils/auth');
 const LoginOtp = require('./models/LoginOtp');
+const GuardianAlert = require('./models/GuardianAlert');
 const { migrateLoginOtpExpiresAtIndex, migrateGuardianLinks } = require('./utils/indexMigrations');
 const { isDevelopmentOrigin } = require('./utils/corsOrigins');
 
@@ -28,25 +29,41 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 const LISTEN_HOST = process.env.HOST || '0.0.0.0';
 
+if (process.env.NODE_ENV === 'production') {
+  const missingSecrets = ['JWT_SECRET', 'TRUSTPAY_SECRET'].filter(name => !process.env[name]);
+  if (missingSecrets.length) {
+    console.error(`❌ Missing required production environment variables: ${missingSecrets.join(', ')}`);
+    process.exit(1);
+  }
+}
+
 const configuredCorsOrigins = String(process.env.CORS_ORIGINS || '')
   .split(',').map(origin => origin.trim()).filter(Boolean);
+const capacitorOrigins = new Set(['capacitor://localhost', 'http://localhost', 'https://localhost']);
 app.use(cors({
   origin(origin, callback) {
-    if (!origin || configuredCorsOrigins.includes(origin)) return callback(null, true);
+    if (!origin || configuredCorsOrigins.includes(origin) || capacitorOrigins.has(origin)) return callback(null, true);
     if (process.env.NODE_ENV !== 'production' && isDevelopmentOrigin(origin)) return callback(null, true);
     return callback(new Error('Origin is not allowed by TrustPay CORS configuration'));
   },
+  credentials: false,
+  methods: ['GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
 }));
 // Razorpay signs the exact bytes sent. This route must run before express.json().
 app.post('/api/webhooks/razorpay', express.raw({ type: 'application/json' }), razorpayWebhook);
 app.use(express.json({ limit: '10mb' }));
 
 // ── MongoDB Connection ─────────────────────────────────────────────────────────
-const MONGO_URI = process.env.MONGO_URI;
+const MONGO_URI = process.env.MONGODB_URI || process.env.MONGO_URI;
 
 if (!MONGO_URI) {
-  console.error('❌ MONGO_URI not found in .env — please set it and restart.');
+  console.error('❌ MONGODB_URI is not configured. Set it before starting TrustPay.');
   process.exit(1);
+}
+
+if (!process.env.MONGODB_URI && process.env.MONGO_URI) {
+  console.warn('⚠️ MONGO_URI is deprecated; rename it to MONGODB_URI.');
 }
 
 mongoose.connect(MONGO_URI, { dbName: 'trustpay' })
@@ -57,10 +74,14 @@ mongoose.connect(MONGO_URI, { dbName: 'trustpay' })
     await LoginOtp.createIndexes();
     await seedDatabase(); // seed demo data if DB is empty
   })
-  .catch(err => {
-    console.error('❌ MongoDB connection failed:', err.message);
+  .catch(() => {
+    console.error('❌ MongoDB connection failed. Check Atlas access and MONGODB_URI configuration.');
     process.exit(1);
   });
+
+mongoose.connection.on('disconnected', () => console.warn('⚠️ MongoDB disconnected; Mongoose will keep retrying.'));
+mongoose.connection.on('reconnected', () => console.log('✅ MongoDB connection restored.'));
+mongoose.connection.on('error', () => console.error('❌ MongoDB connection error.'));
 
 // ── API Routes ────────────────────────────────────────────────────────────────
 app.use('/api/auth',      authRoutes);
@@ -83,7 +104,7 @@ app.get('/', (req, res) => {
 });
 
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', db: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected' });
+  res.json({ status: 'ok', service: 'TrustPay API' });
 });
 
 // ── 404 handler ───────────────────────────────────────────────────────────────
@@ -91,8 +112,38 @@ app.use((req, res) => {
   res.status(404).json({ success: false, message: `Route ${req.method} ${req.path} not found` });
 });
 
+app.use((error, req, res, next) => {
+  if (error?.message === 'Origin is not allowed by TrustPay CORS configuration') {
+    return res.status(403).json({ success: false, message: 'This application origin is not allowed.' });
+  }
+  console.error('Unhandled request error:', error?.message || 'Unknown error');
+  return res.status(500).json({ success: false, message: 'TrustPay encountered a server error.' });
+});
+
 // ── Start server ──────────────────────────────────────────────────────────────
 app.listen(PORT, LISTEN_HOST, () => {
-  console.log(`🚀 TrustPay backend running on ${LISTEN_HOST}:${PORT}`);
+  console.log(`🚀 GuardX backend running on ${LISTEN_HOST}:${PORT}`);
   console.log(`   API docs: GET /api/health | /api/payments | /api/analytics`);
 });
+
+
+// ── Alert Escalation Cron ──────────────────────────────────────────────────────
+setInterval(async () => {
+  try {
+    const tenMinsAgo = new Date(Date.now() - 10 * 60 * 1000);
+    const unresolvedAlerts = await GuardianAlert.find({
+      riskLevel: 'CRITICAL',
+      status: 'active',
+      escalated: false,
+      createdAt: { $lte: tenMinsAgo }
+    });
+
+    for (const alert of unresolvedAlerts) {
+      alert.escalated = true;
+      await alert.save();
+      console.log('ESCALATING UNRESOLVED CRITICAL ALERT:', alert._id);
+    }
+  } catch (err) {
+    console.error('Error during alert escalation cron:', err.message);
+  }
+}, 5 * 60 * 1000);

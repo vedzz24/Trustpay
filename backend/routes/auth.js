@@ -11,7 +11,7 @@ const { generateMerchantId } = require('../utils/merchant');
 const { initializeMerchantDatabase } = require('../utils/merchantDb');
 const { normalizePhoneNumber, maskPhoneNumber } = require('../utils/phone');
 const { issueOtp, consumeOtp } = require('../services/otp');
-const { sendUserWelcomeEmail, sendMerchantWelcomeEmail, sendGuardianAcceptedEmail } = require('../services/email');
+const { sendUserWelcomeEmail, sendMerchantWelcomeEmail, sendGuardianAcceptedEmail, sendGuardianWelcomeEmail, sendLoginNotificationEmail } = require('../services/email');
 
 const roles = new Set(['user', 'merchant', 'guardian']);
 const invitationHash = token => crypto.createHash('sha256').update(token).digest('hex');
@@ -29,13 +29,37 @@ function readOnboardingToken(token) {
 async function safelySendWelcome(user) {
   if (!user.email) return undefined;
   try {
-    if (user.role === 'merchant') await sendMerchantWelcomeEmail({ email: user.email, merchantName: user.merchantName, businessName: user.businessName, merchantId: user.merchantId, upiId: user.upiId });
-    else if (user.role === 'user') await sendUserWelcomeEmail({ email: user.email, name: user.name });
+    if (user.role === 'merchant') {
+      await sendMerchantWelcomeEmail({ email: user.email, merchantName: user.merchantName, businessName: user.businessName, merchantId: user.merchantId, upiId: user.upiId });
+    } else if (user.role === 'guardian') {
+      await sendGuardianWelcomeEmail({ email: user.email, name: user.name });
+    } else {
+      await sendUserWelcomeEmail({ email: user.email, name: user.name });
+    }
+    console.log(`📧 ${roleLabel(user.role)} welcome email delivered to ${user.email}`);
     return 'sent';
-  } catch (_) {
-    console.error(`${roleLabel(user.role)} welcome email delivery failed`);
+  } catch (err) {
+    console.error(`⚠️ ${roleLabel(user.role)} welcome email delivery failed for ${user.email}:`, err.message);
     return 'failed';
   }
+}
+
+function safelySendLoginNotification(user, req) {
+  if (!user?.email) return;
+  const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.socket?.remoteAddress;
+  const userAgent = req.headers['user-agent'];
+  sendLoginNotificationEmail({
+    email: user.email,
+    name: user.merchantName || user.name,
+    role: user.role,
+    loginTime: new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }),
+    ipAddress,
+    userAgent
+  }).then(() => {
+    console.log(`📧 Login notification email delivered to ${user.email} (${user.role})`);
+  }).catch(err => {
+    console.error(`⚠️ Login notification email delivery failed for ${user.email}:`, err.message);
+  });
 }
 async function activateInvitation(token, guardian) {
   if (!token) return false;
@@ -82,7 +106,7 @@ router.post('/signup', async (req, res) => {
     if (await User.exists({ $or: [{ email: normalizedEmail }, ...(normalizedPhone ? [{ phoneNumber: normalizedPhone }] : [])] })) return res.status(409).json({ success: false, message: 'An account with this email or phone number already exists' });
     let user;
     if (role === 'merchant') user = await finishMerchant({ merchantName: name, businessName: businessName || name, email: normalizedEmail, password, upiId }, { phoneNumber: normalizedPhone });
-    else user = await User.create({ name, email: normalizedEmail, phoneNumber: normalizedPhone, password: hashPassword(password), role });
+    else user = await User.create({ name, email: normalizedEmail, phoneNumber: normalizedPhone, password: hashPassword(password), passwordHash: hashPassword(password), role });
     const emailStatus = await safelySendWelcome(user);
     return res.json({ success: true, token: generateToken(user), user: serializeUser(user), ...(emailStatus ? { emailStatus } : {}) });
   } catch (error) {
@@ -107,6 +131,7 @@ router.post('/login', async (req, res) => {
       if (!user.passwordHash) user.passwordHash = stored;
       await user.save(); await initializeMerchantDatabase(user.merchantId);
     }
+    safelySendLoginNotification(user, req);
     return res.json({ success: true, token: generateToken(user), user: serializeUser(user) });
   } catch (error) { console.error('login error:', error.message); return res.status(500).json({ success: false, message: 'Server error' }); }
 });
@@ -135,6 +160,7 @@ router.post('/verify-otp', async (req, res) => {
     if (user) {
       if (user.role !== role) return res.status(403).json({ success: false, code: 'WRONG_ROLE', message: 'This phone number belongs to a different TrustPay account type.' });
       if (!user.phoneVerifiedAt) { user.phoneVerifiedAt = new Date(); await user.save(); }
+      safelySendLoginNotification(user, req);
       return res.json({ success: true, token: generateToken(user), user: serializeUser(user) });
     }
     return res.json({ success: true, requiresProfileCompletion: role !== 'merchant', requiresMerchantOnboarding: role === 'merchant', onboardingToken: makeOnboardingToken({ role, phoneNumber }) });
@@ -156,6 +182,7 @@ router.post('/google', async (req, res) => {
       if (user.googleSub && user.googleSub !== payload.sub) return res.status(409).json({ success: false, message: 'Google sign-in could not be linked to this account.' });
       if (!user.googleSub) { user.googleSub = payload.sub; user.googleLinked = true; user.profilePhoto = payload.picture; await user.save(); }
       const accepted = role === 'guardian' ? await activateInvitation(invitationToken, user) : false;
+      safelySendLoginNotification(user, req);
       return res.json({ success: true, token: generateToken(user), user: serializeUser(user), guardianInvitationAccepted: accepted });
     }
     if (role === 'merchant') return res.json({ success: true, requiresMerchantOnboarding: true, onboardingToken: makeOnboardingToken({ role, googleSub: payload.sub, email, name: payload.name, profilePhoto: payload.picture }) });

@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { ShieldCheck, ShieldAlert, FileText, QrCode, ClipboardList } from 'lucide-react';
 import { checkScam, fetchFraudAlerts, analyzeScreenshot } from '../utils/api';
 import { cn } from '../utils/cn';
+import CriticalRiskModal from '../components/CriticalRiskModal';
+import InstallPrompt from '../components/InstallPrompt';
 
 export default function FraudProtectionCenter({ addToast }) {
   const [activeTab, setActiveTab] = useState('proof');
@@ -79,7 +81,7 @@ export default function FraudProtectionCenter({ addToast }) {
     } else {
       setQrResult({
         valid: false,
-        message: "TRANSACTION MISMATCH: Signature mismatch or invalid TrustPay token configuration."
+        message: "TRANSACTION MISMATCH: Signature mismatch or invalid GuardX token configuration."
       });
     }
   };
@@ -93,7 +95,7 @@ export default function FraudProtectionCenter({ addToast }) {
 
   return (
     <div className="max-w-4xl mx-auto px-6 py-12 space-y-10 min-h-screen font-sans">
-      
+      <InstallPrompt />
       {/* Header */}
       <div className="pb-6 border-b border-slate-300 dark:border-white/10">
         <h1 className="text-3xl font-bold uppercase tracking-wider text-[#2b3033] dark:text-white">Fraud Protection Center</h1>
@@ -160,7 +162,7 @@ export default function FraudProtectionCenter({ addToast }) {
               {checkingScam ? 'Scanning Text Engine...' : 'Run Scam Keyword Audit'}
             </button>
 
-            {scamResult && (
+            {scamResult && scamResult.riskLevel !== 'CRITICAL' && (
               <div className={cn("p-4 rounded-lg border text-xs space-y-1", scamResult.result === 'Safe' ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-500" : "bg-red-500/10 border-red-500/20 text-red-500")}>
                 <div className="font-bold uppercase tracking-wider">Analysis Result: {scamResult.result}</div>
                 <p className="font-semibold text-slate-550 dark:text-slate-400">{scamResult.message}</p>
@@ -169,10 +171,15 @@ export default function FraudProtectionCenter({ addToast }) {
           </form>
         )}
 
+        <CriticalRiskModal 
+          result={scamResult} 
+          onAcknowledge={() => setScamResult({ ...scamResult, riskLevel: 'HIGH' })} 
+        />
+
         {activeTab === 'qr' && (
           <form onSubmit={handleQrCheck} className="space-y-6">
             <div>
-              <h3 className="text-base font-bold uppercase tracking-wider text-[#2b3033] dark:text-white">Verify TrustPay QR Payload</h3>
+              <h3 className="text-base font-bold uppercase tracking-wider text-[#2b3033] dark:text-white">Verify GuardX QR Payload</h3>
               <p className="text-xs text-[#6b6f72] dark:text-slate-400 font-medium mt-1">
                 Manually paste dynamic QR verification tokens to test HMAC integrity structure.
               </p>
@@ -238,13 +245,13 @@ const RESULT_COPY = {
   AMOUNT_MISMATCH: ['PAYMENT MISMATCH ⚠', 'The claimed amount does not match the trusted transaction record.', 'danger'],
   MERCHANT_MISMATCH: ['MERCHANT MISMATCH ⚠', 'This payment cannot be verified for the currently authenticated merchant.', 'danger'],
   DUPLICATE_PROOF: ['DUPLICATE PAYMENT PROOF', 'This payment proof has already been checked previously.', 'warning'],
-  UNREADABLE_PAYMENT_PROOF: ['PAYMENT PROOF UNREADABLE', 'TrustPay detected a payment-related image but could not reliably extract enough information to verify it.', 'warning'],
+  UNREADABLE_PAYMENT_PROOF: ['PAYMENT PROOF UNREADABLE', 'GuardX detected a payment-related image but could not reliably extract enough information to verify it.', 'warning'],
   PAYMENT_PENDING: ['PAYMENT PENDING', 'The trusted transaction exists but is still pending.', 'warning'],
   PAYMENT_FAILED: ['PAYMENT FAILED', 'The trusted transaction exists but has failed.', 'danger'],
 };
 
 function ProofAnalysisResult({ analysis }) {
-  const [title, message, tone] = RESULT_COPY[analysis.result] || ['VERIFICATION UNAVAILABLE', analysis.message || 'TrustPay could not verify this payment at this time. Do not rely on the screenshot alone.', 'danger'];
+  const [title, message, tone] = RESULT_COPY[analysis.result] || ['VERIFICATION UNAVAILABLE', analysis.message || 'GuardX could not verify this payment at this time. Do not rely on the screenshot alone.', 'danger'];
   const extracted = analysis.extracted || {};
   const verification = analysis.verification || {};
   const toneClass = tone === 'verified' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-500' : tone === 'warning' ? 'bg-amber-500/10 border-amber-500/20 text-amber-500' : 'bg-red-500/10 border-red-500/20 text-red-500';

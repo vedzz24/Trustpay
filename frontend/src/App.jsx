@@ -30,11 +30,21 @@ export default function App() {
     () => localStorage.getItem('trustpay_theme') || 'dark'
   );
 
+  const [simpleMode, setSimpleMode] = useState(
+    () => localStorage.getItem('trustpay_simple_mode') === 'true'
+  );
+
   useEffect(() => {
     const root = document.documentElement;
     theme === 'dark' ? root.classList.add('dark') : root.classList.remove('dark');
     localStorage.setItem('trustpay_theme', theme);
   }, [theme]);
+
+  useEffect(() => {
+    const root = document.documentElement;
+    simpleMode ? root.classList.add('simple-mode') : root.classList.remove('simple-mode');
+    localStorage.setItem('trustpay_simple_mode', simpleMode.toString());
+  }, [simpleMode]);
 
   useEffect(() => {
     if (user) localStorage.setItem('trustpay_user', JSON.stringify(user));
@@ -52,6 +62,7 @@ export default function App() {
   }, []);
 
   const toggleTheme = () => setTheme(t => t === 'dark' ? 'light' : 'dark');
+  const toggleSimpleMode = () => setSimpleMode(m => !m);
   const logout      = () => {
     localStorage.removeItem('trustpay_token');
     setUser(null);
@@ -64,7 +75,7 @@ export default function App() {
     setTimeout(() => setToasts(p => p.filter(t => t.id !== id)), 4500);
   };
 
-  const publicSafetyPage = page => user ? <><Navbar user={user} logout={logout} theme={theme} toggleTheme={toggleTheme} /><main className="flex-1 pt-20 pb-16">{page}</main></> : page;
+  const publicSafetyPage = page => user ? <><Navbar user={user} logout={logout} theme={theme} toggleTheme={toggleTheme} simpleMode={simpleMode} toggleSimpleMode={toggleSimpleMode} /><main className="flex-1 pt-20 pb-16">{page}</main></> : page;
 
   return (
     <BrowserRouter>
@@ -100,7 +111,7 @@ export default function App() {
                   />
                 ) : (
                   <>
-                    <Navbar user={user} logout={logout} theme={theme} toggleTheme={toggleTheme} />
+                    <Navbar user={user} logout={logout} theme={theme} toggleTheme={toggleTheme} simpleMode={simpleMode} toggleSimpleMode={toggleSimpleMode} />
                     <main className="flex-1 pt-20 pb-16">
                       <Routes>
                         <Route path="/blog"       element={<Blog />} />
@@ -130,7 +141,7 @@ export default function App() {
                             <Route path="/" element={<Navigate to="/guardian/dashboard" replace />} />
                             <Route path="/guardian/dashboard" element={<GuardianDashboard />} />
                             <Route path="/guardian/protected-users" element={<ProtectedUsers />} />
-                            <Route path="/guardian/alerts" element={<GuardianAlerts />} />
+                            <Route path="/guardian/alerts" element={<GuardianAlerts addToast={addToast} />} />
                             <Route path="/guardian/about" element={<GuardianAbout />} />
                             <Route path="*" element={<Navigate to="/guardian/dashboard" replace />} />
                           </>

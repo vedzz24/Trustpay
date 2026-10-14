@@ -15,7 +15,8 @@ const INDIAN_NAMES = [
 
 // Helper to calculate cryptographic transaction hash for integrity verification
 function calculateTxnHash(txnId, amount, name, time) {
-  const secret = process.env.TRUSTPAY_SECRET || 'trustpay_super_secure_key_987';
+  const secret = process.env.TRUSTPAY_SECRET;
+  if (!secret) throw new Error('TRUSTPAY_SECRET is not configured');
   return crypto.createHmac('sha256', secret)
                .update(`${txnId}|${amount}|${name}|${time}`)
                .digest('hex');
@@ -109,7 +110,7 @@ router.post('/scan-qr', requireMerchant, async (req, res) => {
     const { Payment } = getMerchantModels(req.user.merchantId);
     const { qrData } = req.body;
     if (!qrData || !qrData.startsWith('trustpay-verify:'))
-      return res.json({ success: false, status: 'suspicious', message: 'Invalid TrustPay QR format' });
+      return res.json({ success: false, status: 'suspicious', message: 'Invalid QR format. Please scan a valid GuardX payment credential.' });
 
     const token = qrData.replace('trustpay-verify:', '').trim();
     const parts = token.split('.');
@@ -150,7 +151,14 @@ router.post('/scan-qr', requireMerchant, async (req, res) => {
       return res.json({
         success: false,
         status: 'unmatched',
-        message: '⚠️ WARNING: Transaction signature is valid, but it does not exist in this merchant ledger.'
+        message: `⚠️ WARNING: Valid proof for customer "${name || 'Customer'}" (₹${amount}), but it does not belong to your merchant ledger (${req.user.merchantId}).`,
+        payment: {
+          name: name || 'Customer',
+          amount: Number(amount),
+          txnId,
+          status: 'unmatched_merchant',
+          belongsToThisMerchant: false,
+        },
       });
     }
 

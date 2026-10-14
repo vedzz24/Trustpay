@@ -3,6 +3,8 @@ node_modules/
 
 # Environment secrets — never commit this
 .env
+.env.*
+!.env.example
 
 # Build output
 dist/
@@ -15,3 +17,11 @@ Thumbs.db
 # Logs
 *.log
 npm-debug.log*
+
+# Android machine-specific and signing secrets
+local.properties
+*.jks
+*.keystore
+frontend/android/.gradle/
+frontend/android/app/build/
+frontend/android/build/

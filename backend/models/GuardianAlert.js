@@ -11,6 +11,7 @@ const schema = new mongoose.Schema({
   transactionId: { type: String, trim: true },
   qrInfo: { type: String, maxlength: 300 },
   status: { type: String, enum: ['active', 'resolved'], default: 'active', index: true },
+  escalated: { type: Boolean, default: false, index: true },
   resolvedAt: Date,
 }, { timestamps: true, collection: 'guardianAlerts' });
 

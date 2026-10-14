@@ -21,7 +21,7 @@ export default function Privacy() {
 
       <motion.div variants={itemVars} className="prose prose-slate dark:prose-invert max-w-none prose-headings:font-black prose-headings:tracking-tight prose-a:text-cyan-600 dark:prose-a:text-cyan-400 prose-p:font-medium prose-p:text-slate-600 dark:prose-p:text-slate-300">
         <p className="text-lg">
-          TrustPay Technologies Inc. ("TrustPay", "we", "our") engineers software under a strict zero-knowledge trust model. Our objective is to secure digital commerce while harvesting an absolute minimum footprint of Personally Identifiable Information (PII).
+          GuardX Technologies Inc. ("GuardX", "we", "our") engineers software under a strict zero-knowledge trust model. Our objective is to secure digital commerce while harvesting an absolute minimum footprint of Personally Identifiable Information (PII).
         </p>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 my-10 not-prose">
@@ -39,7 +39,7 @@ export default function Privacy() {
 
         <h2>Section 1: Telemetry and Capture</h2>
         <p>
-          To maintain the operational capability of the <strong>TrustPay Safe Mode</strong> engine, we temporarily ingest:
+          To maintain the operational capability of the <strong>GuardX Safe Mode</strong> engine, we temporarily ingest:
         </p>
         <ul>
           <li><strong>Temporal Execution Stamps:</strong> The exact millisecond a QR token is requested versus verified.</li>
@@ -48,13 +48,13 @@ export default function Privacy() {
 
         <h2>Section 2: Guardian Protection</h2>
         <p>
-          When an authenticated safety check produces a HIGH or CRITICAL result and an active GuardianLink exists, TrustPay creates a limited safety alert for the linked Guardian. Alerts exclude passwords, OTPs, UPI PINs, banking credentials, and unnecessary raw message content.
+          When an authenticated safety check produces a HIGH or CRITICAL result and an active GuardianLink exists, GuardX creates a limited safety alert for the linked Guardian. Alerts exclude passwords, OTPs, UPI PINs, banking credentials, and unnecessary raw message content.
         </p>
 
         <div className="p-6 bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 rounded-2xl my-8 not-prose">
           <h4 className="flex items-center gap-2 text-sm font-black text-amber-700 dark:text-amber-400 uppercase tracking-widest mb-2"><ShieldAlert className="w-4 h-4"/> Law Enforcement Clause</h4>
           <p className="text-sm font-medium text-amber-900 dark:text-amber-200 leading-relaxed">
-            While TrustPay protects user integrity, we stringently comply with verified, warrant-backed requests from domestic and international financial task forces targeting digital cybercrime rings.
+            While GuardX protects user integrity, we stringently comply with verified, warrant-backed requests from domestic and international financial task forces targeting digital cybercrime rings.
           </p>
         </div>
 

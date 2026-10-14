@@ -3,8 +3,10 @@ const mongoose = require('mongoose');
 const User = require('../models/User');
 const GuardianLink = require('../models/GuardianLink');
 const GuardianAlert = require('../models/GuardianAlert');
+const PushSubscription = require('../models/PushSubscription');
 const { requireGuardian, generateToken } = require('../utils/auth');
 const { hashPassword, verifyPassword } = require('../utils/passwords');
+const { sendGuardianWelcomeEmail, sendLoginNotificationEmail } = require('../services/email');
 
 const emailPattern = /^\S+@\S+\.\S+$/;
 const safeAccount = account => ({ id: account._id, name: account.name, email: account.email, role: account.role });
@@ -14,19 +16,55 @@ const publicAlert = alert => ({ id: alert._id, alertId: alert.alertId,
   reason: alert.reason, riskReasons: alert.riskReasons, transactionId: alert.transactionId, qrInfo: alert.qrInfo,
   status: alert.status, createdAt: alert.createdAt, resolvedAt: alert.resolvedAt });
 
+const sseConnections = new Map();
+
+router.get('/alerts/stream', requireGuardian, (req, res) => {
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+  res.flushHeaders();
+  sseConnections.set(req.user.id, res);
+  req.on('close', () => {
+    if (sseConnections.get(req.user.id) === res) {
+      sseConnections.delete(req.user.id);
+    }
+  });
+});
+
 router.post('/register', async (req, res) => {
-  const name = String(req.body.name || '').trim(); const email = String(req.body.email || '').trim().toLowerCase();
+  const name = String(req.body.name || '').trim(); const email = String(req.body.email || '').trim().toLowerCase(); const phoneNumber = req.body.phoneNumber ? String(req.body.phoneNumber).trim() : undefined;
   const password = String(req.body.password || ''); const confirmPassword = req.body.confirmPassword == null ? password : String(req.body.confirmPassword);
   if (name.length < 2 || !emailPattern.test(email) || password.length < 8 || password.length > 128) return res.status(400).json({ success: false, message: 'Enter a valid full name, email and password of at least 8 characters.' });
   if (password !== confirmPassword) return res.status(400).json({ success: false, message: 'Passwords do not match.' });
   if (await User.exists({ email })) return res.status(409).json({ success: false, message: 'An account with this email already exists.' });
-  const guardian = await User.create({ name, email, passwordHash: hashPassword(password), role: 'guardian' });
+  const guardian = await User.create({ name, email, phoneNumber, password: hashPassword(password), passwordHash: hashPassword(password), role: 'guardian' });
+  sendGuardianWelcomeEmail({ email, name }).then(() => {
+    console.log(`📧 Guardian welcome email delivered to ${email}`);
+  }).catch(err => {
+    console.error(`⚠️ Guardian welcome email delivery failed for ${email}:`, err.message);
+  });
   return res.status(201).json({ success: true, token: generateToken(guardian), user: safeAccount(guardian) });
 });
 
 router.post('/login', async (req, res) => {
   const email = String(req.body.email || '').trim().toLowerCase(); const guardian = await User.findOne({ email, role: 'guardian' }).select('+passwordHash');
   if (!guardian || !verifyPassword(String(req.body.password || ''), guardian.passwordHash || guardian.password)) return res.status(401).json({ success: false, message: 'Incorrect guardian email or password.' });
+  
+  const clientIp = req.ip || req.headers['x-forwarded-for'] || req.socket?.remoteAddress;
+  const userAgent = req.headers['user-agent'];
+  sendLoginNotificationEmail({
+    email: guardian.email,
+    name: guardian.name,
+    role: guardian.role,
+    loginTime: new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }),
+    ipAddress: clientIp,
+    userAgent
+  }).then(() => {
+    console.log(`📧 Login notification email delivered to ${guardian.email} (guardian)`);
+  }).catch(err => {
+    console.error(`⚠️ Login notification email delivery failed for ${guardian.email}:`, err.message);
+  });
+
   return res.json({ success: true, token: generateToken(guardian), user: safeAccount(guardian) });
 });
 
@@ -105,4 +143,23 @@ router.get('/dashboard', requireGuardian, async (req, res) => {
   return res.json({ success: true, summary: { protectedUsers: links.length, activeAlerts, highRiskAlerts, resolvedAlerts }, recentAlerts: alerts.map(publicAlert) });
 });
 
+router.post('/push-subscribe', requireGuardian, async (req, res) => {
+  const subscription = req.body;
+  if (!subscription || !subscription.endpoint) {
+    return res.status(400).json({ success: false, message: 'Invalid subscription object.' });
+  }
+  
+  // Remove existing subscription with same endpoint to avoid duplicates
+  await PushSubscription.deleteOne({ 'subscription.endpoint': subscription.endpoint });
+  
+  await PushSubscription.create({
+    userId: req.user.id,
+    subscription
+  });
+  
+  return res.json({ success: true, message: 'Push subscription saved.' });
+});
+
 module.exports = router;
+module.exports.sseConnections = sseConnections;
+module.exports.publicAlert = publicAlert;

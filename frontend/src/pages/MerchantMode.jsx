@@ -113,7 +113,7 @@ export default function MerchantMode({ addToast }) {
     setScanning(true);
     try {
       const res = await scanQR(scanInput.trim());
-      if (res.success) {
+      if (res.success && res.status === 'verified') {
         addToast('QR verified! Settlement logged to ledger.', 'success');
         setScanInput('');
         setShowScanModal(false);
@@ -151,7 +151,7 @@ export default function MerchantMode({ addToast }) {
           <button onClick={() => setShowScanModal(true)} className="btn-chamfered flex items-center justify-center gap-2 px-5 py-3 bg-[#15BCDF] hover:bg-[#3fd0ef] text-white font-bold uppercase text-xs tracking-wider transition-colors shadow-sm">
             <QrCode className="w-4 h-4" /> Scan QR code
           </button>
-          <button onClick={() => { setCreatedRequest(null); setShowCreateModal(true); }} className="btn-chamfered flex items-center justify-center gap-2 px-5 py-3 bg-[#2b3033] dark:bg-white/5 border border-slate-350 dark:border-white/10 hover:bg-[#15BCDF] text-slate-800 dark:text-white hover:text-white font-bold uppercase text-xs tracking-wider transition-colors shadow-sm">
+          <button onClick={() => { setCreatedRequest(null); setShowCreateModal(true); }} className="btn-chamfered flex items-center justify-center gap-2 px-5 py-3 bg-white dark:bg-white/5 border-2 border-[#15BCDF] text-[#15BCDF] dark:text-[#38bdf8] hover:bg-[#15BCDF] hover:text-white dark:hover:bg-[#15BCDF] dark:hover:text-white font-bold uppercase text-xs tracking-wider transition-colors shadow-sm">
             <Plus className="w-4 h-4" /> Create Request
           </button>
         </div>

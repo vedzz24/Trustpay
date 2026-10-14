@@ -78,7 +78,7 @@ export default function SecurityCenter() {
     <header className="pb-6 border-b border-slate-300 dark:border-white/10">
       <p className="text-[10px] font-bold tracking-[.24em] text-[#15BCDF] uppercase">Evidence and audit trail</p>
       <h1 className="text-3xl font-bold uppercase tracking-wider text-[#2b3033] dark:text-white mt-2">Security Center</h1>
-      <p className="text-[#6b6f72] dark:text-slate-400 text-sm font-medium mt-1">Why TrustPay trusted, rejected, or flagged a payment.</p>
+      <p className="text-[#6b6f72] dark:text-slate-400 text-sm font-medium mt-1">Why GuardX trusted, rejected, or flagged a payment.</p>
     </header>
 
     {error && <div role="alert" className="p-4 rounded-xl border border-red-500/20 bg-red-500/10 text-red-500 text-sm font-semibold">{error}</div>}
@@ -108,11 +108,11 @@ export default function SecurityCenter() {
         <div className="flex items-center gap-3 mb-5"><ShieldCheck className="w-5 h-5 text-[#15BCDF]"/><h2 className="text-sm font-bold uppercase tracking-wider text-[#2b3033] dark:text-white">Latest Verification</h2></div>
         {!latest ? <p className="text-sm text-slate-500 italic py-10 text-center">No verified payment records yet.</p> : <div className="grid grid-cols-2 gap-x-5 gap-y-4">
           {[
-            ['Amount', `₹${latest.amount}`], ['TrustPay Transaction', latest.trustpayTransactionId], ['Merchant', latest.merchantId],
+            ['Amount', `₹${latest.amount}`], ['GuardX Transaction', latest.trustpayTransactionId], ['Merchant', latest.merchantId],
             ['Razorpay Order', show(latest.razorpayOrderId)], ['Razorpay Payment', show(latest.razorpayPaymentId)], ['Gateway Status', show(latest.gatewayStatus)],
             ['Webhook Signature', show(latest.webhookSignature)], ['Merchant Match', latest.merchantMatch], ['Duplicate Event', latest.duplicateEvent ? 'YES' : 'NO'], ['Verified At', dateTime(latest.verifiedAt)],
           ].map(([label, value]) => <Info key={label} label={label} value={value}/>)}
-          <div className="col-span-2 p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 text-center text-xs font-bold uppercase tracking-wider">TrustPay Verified ✓</div>
+          <div className="col-span-2 p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 text-center text-xs font-bold uppercase tracking-wider">GuardX Verified ✓</div>
         </div>}
       </section>
     </div>
@@ -120,7 +120,7 @@ export default function SecurityCenter() {
     <section className={`${card} p-6`}>
       <div className="flex items-center gap-3 mb-5"><FileSearch className="w-5 h-5 text-[#15BCDF]"/><div><h2 className="text-sm font-bold uppercase tracking-wider text-[#2b3033] dark:text-white">Verify Transaction</h2><p className="text-xs text-slate-500 mt-1">Searches only this authenticated merchant’s transaction database.</p></div></div>
       <form onSubmit={verify} className="grid md:grid-cols-[1fr_180px_auto] gap-3">
-        <input required value={identifier} onChange={e => setIdentifier(e.target.value)} placeholder="TrustPay transaction ID or payment ID" className="px-4 py-3 rounded-lg border border-slate-300 dark:border-white/10 bg-white dark:bg-black/25 text-sm text-[#2b3033] dark:text-white outline-none focus:ring-1 focus:ring-[#15BCDF]"/>
+        <input required value={identifier} onChange={e => setIdentifier(e.target.value)} placeholder="GuardX transaction ID or payment ID" className="px-4 py-3 rounded-lg border border-slate-300 dark:border-white/10 bg-white dark:bg-black/25 text-sm text-[#2b3033] dark:text-white outline-none focus:ring-1 focus:ring-[#15BCDF]"/>
         <input value={claimedAmount} onChange={e => setClaimedAmount(e.target.value)} type="number" min="0" step="0.01" placeholder="Claimed amount" className="px-4 py-3 rounded-lg border border-slate-300 dark:border-white/10 bg-white dark:bg-black/25 text-sm text-[#2b3033] dark:text-white outline-none focus:ring-1 focus:ring-[#15BCDF]"/>
         <button disabled={verifying} className="px-5 py-3 rounded-lg bg-[#15BCDF] hover:bg-[#3fd0ef] disabled:opacity-50 text-white text-xs font-bold uppercase tracking-wider">{verifying ? 'Verifying…' : 'Verify Transaction'}</button>
       </form>
@@ -140,7 +140,74 @@ function Info({ label, value }) { return <div><p className="text-[9px] uppercase
 function VerificationResult({ result }) {
   const verified = result.success && result.result === 'VERIFIED';
   const mismatch = result.result === 'AMOUNT_MISMATCH';
-  return <div role="status" className={`mt-5 p-4 rounded-lg border text-sm ${verified ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-500' : 'bg-red-500/10 border-red-500/20 text-red-500'}`}><p className="font-bold uppercase tracking-wider">{verified ? 'Verified ✓' : mismatch ? 'Amount Mismatch' : 'Not Verified'}</p>{verified && <div className="grid sm:grid-cols-4 gap-3 mt-3 text-xs"><span>Amount<br/><b>₹{result.verification.amount}</b></span><span>Merchant<br/><b>{result.verification.merchantId}</b></span><span>Gateway<br/><b>{show(result.verification.gatewayStatus)}</b></span><span>TrustPay<br/><b>{result.verification.trustpayStatus.toUpperCase()}</b></span></div>}{mismatch && <p className="mt-2 text-xs">Claimed ₹{result.claimedAmount} · Verified ₹{result.verifiedAmount}</p>}{!verified && !mismatch && <p className="mt-2 text-xs">{result.message || 'This record is not verified.'}</p>}</div>;
+  const isExternal = result.result === 'EXTERNAL_PAYMENT' || result.result === 'EXTERNAL_MERCHANT_PAYMENT' || result.belongsToThisMerchant === false || result.externalDetails?.belongsToThisMerchant === false;
+  const ext = result.externalDetails;
+
+  if (isExternal && ext) {
+    return (
+      <div role="status" className="mt-5 p-5 rounded-xl border border-amber-500/40 bg-amber-500/10 text-amber-900 dark:text-amber-200 space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="inline-block w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse" />
+            <p className="font-black uppercase tracking-wider text-sm text-amber-600 dark:text-amber-400">
+              {result.result === 'EXTERNAL_MERCHANT_PAYMENT' ? '⚠️ Payment Routed to Another Merchant' : 'ℹ️ Payment Processed on External Network'}
+            </p>
+          </div>
+          <span className="text-[10px] font-bold px-2.5 py-1 rounded bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/30">
+            NOT YOUR ACCOUNT
+          </span>
+        </div>
+        <p className="text-xs text-slate-700 dark:text-slate-300 font-medium">
+          {result.message}
+        </p>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-3.5 rounded-lg bg-white/80 dark:bg-black/40 border border-amber-500/20 text-xs">
+          <div>
+            <span className="text-[9px] uppercase tracking-wider font-bold text-slate-400 block">Paid To (Recipient)</span>
+            <strong className="text-[#2b3033] dark:text-white font-bold text-sm block mt-0.5">{ext.paidTo || 'External Payee'}</strong>
+          </div>
+          <div>
+            <span className="text-[9px] uppercase tracking-wider font-bold text-slate-400 block">Went Where (Destination)</span>
+            <strong className="text-[#2b3033] dark:text-white font-bold text-xs block mt-0.5 break-all">{ext.destination || 'External Network'}</strong>
+          </div>
+          <div>
+            <span className="text-[9px] uppercase tracking-wider font-bold text-slate-400 block">Amount</span>
+            <strong className="text-emerald-600 dark:text-emerald-400 font-bold text-sm block mt-0.5">{ext.amount != null ? `₹${ext.amount}` : 'Not Specified'}</strong>
+          </div>
+          <div>
+            <span className="text-[9px] uppercase tracking-wider font-bold text-slate-400 block">Payer / Customer</span>
+            <strong className="text-[#2b3033] dark:text-white font-bold text-xs block mt-0.5">{ext.payer || 'Customer'}</strong>
+          </div>
+        </div>
+        <div className="flex flex-wrap items-center justify-between text-[10px] text-slate-500 dark:text-slate-400 pt-1 font-mono">
+          <span>Reference: {ext.referenceId || 'N/A'}</span>
+          <span>Status: {ext.status || 'External'}</span>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div role="status" className={`mt-5 p-4 rounded-lg border text-sm ${verified ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-500' : 'bg-red-500/10 border-red-500/20 text-red-500'}`}>
+      <p className="font-bold uppercase tracking-wider">{verified ? 'Verified ✓' : mismatch ? 'Amount Mismatch' : 'Not Verified'}</p>
+      {verified && (
+        <div className="grid sm:grid-cols-4 gap-3 mt-3 text-xs">
+          <span>Amount<br/><b>₹{result.verification.amount}</b></span>
+          <span>Merchant<br/><b>{result.verification.merchantId}</b></span>
+          <span>Gateway<br/><b>{show(result.verification.gatewayStatus)}</b></span>
+          <span>GuardX<br/><b>{result.verification.trustpayStatus.toUpperCase()}</b></span>
+        </div>
+      )}
+      {mismatch && <p className="mt-2 text-xs">Claimed ₹{result.claimedAmount} · Verified ₹{result.verifiedAmount}</p>}
+      {!verified && !mismatch && (
+        <div className="mt-2 text-xs space-y-1">
+          <p>{result.message || 'This record is not verified.'}</p>
+          {result.externalDetails && (
+            <p className="text-slate-400 font-mono text-[10px]">Reference: {result.externalDetails.referenceId} · Recipient: {result.externalDetails.paidTo}</p>
+          )}
+        </div>
+      )}
+    </div>
+  );
 }
 
 function EventModal({ event, onClose }) {

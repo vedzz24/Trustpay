@@ -3,7 +3,7 @@ const User = require('../models/User');
 const UserSafetyReport = require('../models/UserSafetyReport');
 const { hashPassword, verifyPassword } = require('../utils/passwords');
 const { generateToken, requireUser } = require('../utils/auth');
-const { sendUserWelcomeEmail } = require('../services/email');
+const { sendUserWelcomeEmail, sendLoginNotificationEmail } = require('../services/email');
 const GuardianLink = require('../models/GuardianLink');
 
 const publicUser = user => ({ id: user._id, name: user.name, email: user.email, role: user.role });
@@ -17,10 +17,15 @@ router.post('/register', async (req, res) => {
   if (password.length < 8 || password.length > 128) return res.status(400).json({ success: false, message: 'Password must be 8–128 characters.' });
   try {
     if (await User.exists({ email })) return res.status(409).json({ success: false, message: 'An account with this email already exists.' });
-    const user = await User.create({ name, email, passwordHash: hashPassword(password), role: 'user' });
+    const user = await User.create({ name, email, password: hashPassword(password), passwordHash: hashPassword(password), role: 'user' });
     let emailStatus = 'sent';
-    try { await sendUserWelcomeEmail({ email, name }); }
-    catch (_) { emailStatus = 'failed'; console.error('User welcome email delivery failed'); }
+    try {
+      await sendUserWelcomeEmail({ email, name });
+      console.log(`📧 User welcome email delivered to ${email}`);
+    } catch (err) {
+      emailStatus = 'failed';
+      console.error(`⚠️ User welcome email failed for ${email}:`, err.message);
+    }
     return res.status(201).json({ success: true, token: generateToken(user), user: publicUser(user), emailStatus,
       message: emailStatus === 'sent' ? 'Account created successfully.' : 'Account created. Confirmation email could not be sent right now.' });
   } catch (error) {
@@ -34,6 +39,22 @@ router.post('/login', async (req, res) => {
   const password = String(req.body.password || '');
   const user = await User.findOne({ email, role: 'user' }).select('+passwordHash');
   if (!user || !verifyPassword(password, user.passwordHash || user.password)) return res.status(401).json({ success: false, message: 'Incorrect email or password.' });
+  
+  const clientIp = req.ip || req.headers['x-forwarded-for'] || req.socket?.remoteAddress;
+  const userAgent = req.headers['user-agent'];
+  sendLoginNotificationEmail({
+    email: user.email,
+    name: user.name,
+    role: user.role,
+    loginTime: new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }),
+    ipAddress: clientIp,
+    userAgent
+  }).then(() => {
+    console.log(`📧 Login notification email delivered to ${user.email} (user)`);
+  }).catch(err => {
+    console.error(`⚠️ Login notification email failed for ${user.email}:`, err.message);
+  });
+
   return res.json({ success: true, token: generateToken(user), user: publicUser(user) });
 });
 

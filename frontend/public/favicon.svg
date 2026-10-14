@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0a0f1d" />
+      <stop offset="50%" stop-color="#0e1726" />
+      <stop offset="100%" stop-color="#050811" />
+    </linearGradient>
+
+    <linearGradient id="neonCyan" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8" />
+      <stop offset="50%" stop-color="#15BCDF" />
+      <stop offset="100%" stop-color="#0284c7" />
+    </linearGradient>
+
+    <linearGradient id="shieldInner" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1e293b" stop-opacity="0.9" />
+      <stop offset="100%" stop-color="#0f172a" stop-opacity="0.95" />
+    </linearGradient>
+  </defs>
+
+  <rect width="512" height="512" rx="112" fill="url(#bgGrad)" />
+  <rect width="504" height="504" x="4" y="4" rx="108" fill="none" stroke="#15BCDF" stroke-width="6" stroke-opacity="0.4" />
+
+  <!-- Outer Cyber Shield Rim -->
+  <path d="M 256 94 L 370 146 V 262 C 370 332 320 394 256 418 C 192 394 142 332 142 262 V 146 Z"
+        fill="url(#shieldInner)" stroke="url(#neonCyan)" stroke-width="14" stroke-linejoin="round" />
+
+  <!-- Inner Chamfered Shield Border -->
+  <path d="M 256 122 L 344 162 V 254 C 344 310 306 360 256 380 C 206 360 168 310 168 254 V 162 Z"
+        fill="#090d16" stroke="#15BCDF" stroke-width="5" stroke-opacity="0.6" stroke-linejoin="round" />
+
+  <!-- The Iconic Stylized "X" & Security Checkmark -->
+  <path d="M 198 190 L 314 306" stroke="url(#neonCyan)" stroke-width="26" stroke-linecap="round" />
+  <path d="M 314 190 L 268 236" stroke="url(#neonCyan)" stroke-width="26" stroke-linecap="round" />
+  <path d="M 238 266 L 198 306" stroke="url(#neonCyan)" stroke-width="26" stroke-linecap="round" />
+
+  <!-- Floating Center Core Diamond -->
+  <polygon points="256,228 278,250 256,272 234,250" fill="#ffffff" />
+  <circle cx="256" cy="250" r="5" fill="#15BCDF" />
+</svg>

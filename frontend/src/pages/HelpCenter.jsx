@@ -10,9 +10,9 @@ export default function HelpCenter() {
   const itemVars = { hidden: { opacity: 0, y: 15 }, visible: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 300 } } };
 
   const faqs = [
-    { q: "How does the 'Generate QR' prove I paid?", a: "Unlike standard static QR codes, TrustPay generates dynamic, time-locked cryptographic tokens. When you mint a QR receipt, the backend signs the timestamp and amount. When the merchant scans it, the central server validates the signature, completely eliminating the chance of fake screenshot apps fooling the merchant." },
-    { q: "How does Guardian Protection work?", a: "A registered User can invite a trusted Guardian. After the invitation is accepted, authenticated TrustPay safety checks classified HIGH or CRITICAL create an alert for that Guardian. Guardian Protection does not approve, block, or control external payments." },
-    { q: "Is the Scam Message Analyzer reading my private texts?", a: "No. TrustPay’s forensic analyzer does not auto-scan your inbox. You must intentionally copy and paste suspicious text into the engine. Our system then cross-references known malicious patterns (e.g., urgency flags, illegitimate UPI shortcodes)." },
+    { q: "How does the 'Generate QR' prove I paid?", a: "Unlike standard static QR codes, GuardX generates dynamic, time-locked cryptographic tokens. When you mint a QR receipt, the backend signs the timestamp and amount. When the merchant scans it, the central server validates the signature, completely eliminating the chance of fake screenshot apps fooling the merchant." },
+    { q: "How does Guardian Protection work?", a: "A registered User can invite a trusted Guardian. After the invitation is accepted, authenticated GuardX safety checks classified HIGH or CRITICAL create an alert for that Guardian. Guardian Protection does not approve, block, or control external payments." },
+    { q: "Is the Scam Message Analyzer reading my private texts?", a: "No. GuardX’s forensic analyzer does not auto-scan your inbox. You must intentionally copy and paste suspicious text into the engine. Our system then cross-references known malicious patterns (e.g., urgency flags, illegitimate UPI shortcodes)." },
     { q: "Can merchants fake matching transactions?", a: "Our proprietary 60-second temporal matching algorithm requires standard payment networks to sync precisely with the user's terminal clock. If multiple payments collide, the system flags it as 'Suspicious' and forces manual ID verification." }
   ];
 
@@ -23,7 +23,7 @@ export default function HelpCenter() {
         <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-cyan-500 to-indigo-600 flex items-center justify-center text-white mx-auto shadow-2xl shadow-cyan-500/30 mb-6">
           <LifeBuoy className="w-8 h-8" />
         </div>
-        <h1 className="text-4xl md:text-5xl font-black text-slate-800 dark:text-white tracking-tight">TrustPay Help Desk</h1>
+        <h1 className="text-4xl md:text-5xl font-black text-slate-800 dark:text-white tracking-tight">GuardX Help Desk</h1>
         <p className="text-slate-500 dark:text-slate-400 font-medium text-lg">Detailed documentation and rapid support for the world's most secure transaction architecture.</p>
       </motion.div>
 
@@ -31,7 +31,7 @@ export default function HelpCenter() {
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-8 hover:border-cyan-500 dark:hover:border-cyan-500 transition-colors cursor-pointer group">
           <MessageCircle className="w-8 h-8 text-cyan-500 mb-4" />
           <h3 className="text-xl font-black text-slate-800 dark:text-white mb-2">Live Chat Support</h3>
-          <p className="text-sm font-medium text-slate-500 dark:text-slate-400 mb-6">Connect with a certified TrustPay security architect in real-time to discuss platform queries.</p>
+          <p className="text-sm font-medium text-slate-500 dark:text-slate-400 mb-6">Connect with a certified GuardX security architect in real-time to discuss platform queries.</p>
           <div className="text-sm font-bold text-cyan-600 dark:text-cyan-400 flex items-center gap-1 group-hover:translate-x-2 transition-transform uppercase tracking-widest">Open Chat <ArrowRight className="w-4 h-4"/></div>
         </div>
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-8 hover:border-cyan-500 dark:hover:border-cyan-500 transition-colors cursor-pointer group">

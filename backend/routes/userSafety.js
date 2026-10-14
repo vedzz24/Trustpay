@@ -25,7 +25,27 @@ async function analyzePublicProof(imageData) {
     const merchant = await User.findOne({ merchantId: extracted.merchantId, role: 'merchant' }).select('merchantId').lean();
     merchantId = merchant?.merchantId;
   }
-  if (!merchantId) return { success: true, result: extracted.orderId || extracted.transactionId || extracted.paymentId ? 'PAYMENT_NOT_FOUND' : 'UNREADABLE_PAYMENT_PROOF', paymentProofDetected: true };
+  if (!merchantId) {
+    const paidTo = extracted.payee || (extracted.merchantId ? `Merchant ${extracted.merchantId}` : 'External Beneficiary');
+    const destination = extracted.upiId || extracted.bank || extracted.paymentMethod || (extracted.utr ? 'UPI / Bank Network' : 'External Payment Network');
+    return {
+      success: true,
+      result: 'EXTERNAL_PAYMENT',
+      paymentProofDetected: true,
+      externalPayment: {
+        paidTo,
+        destination,
+        amount: extracted.claimedAmount,
+        payer: extracted.payer || 'Customer',
+        referenceId: extracted.utr || extracted.transactionId || extracted.paymentId || extracted.referenceId,
+        date: extracted.date,
+        time: extracted.time,
+        paymentMethod: extracted.paymentMethod,
+        belongsToTrustPay: false,
+      },
+      message: `Payment detected: ₹${extracted.claimedAmount != null ? extracted.claimedAmount : ''} paid to "${paidTo}" via ${destination}. Note: This payment went to an external recipient outside TrustPay.`,
+    };
+  }
   const full = await analyzePaymentProof({ merchantId, imageData, models: getMerchantModels(merchantId), ocr: async () => ocr, persist: false });
   return { success: true, result: full.result, paymentProofDetected: full.paymentProofDetected,
     verification: full.verification, registeredMerchantId: merchantId,
@@ -108,14 +128,33 @@ router.post('/shield-scan', optionalUser, async (req, res) => {
   } catch (_) { return res.status(400).json({ success: false, message: 'Shield Scan could not be completed.' }); }
 });
 
+function normalizeCheckType(type = '') {
+  const upper = String(type).toUpperCase().replace(/[\s_-]+/g, '_');
+  if (upper.includes('QR')) return 'QR';
+  if (upper.includes('OTP')) return 'OTP';
+  if (upper.includes('AUDIO') || upper.includes('VOICE')) return 'AUDIO';
+  if (upper.includes('PAYMENT') || upper.includes('PROOF')) return 'PAYMENT_PROOF';
+  if (upper.includes('SHIELD')) return 'SHIELD';
+  return 'MESSAGE';
+}
+
 router.post('/reports', requireUser, async (req, res) => {
-  const { checkType, riskLevel, resultCode } = req.body;
+  const { checkType, riskLevel = 'UNKNOWN', resultCode = 'REPORT' } = req.body;
   const summary = redactOtp(String(req.body.summary || '').trim()).slice(0, 500);
   if (!summary) return res.status(400).json({ success: false, message: 'A safe report summary is required.' });
   try {
-    const report = await UserSafetyReport.create({ userId: req.user.id, checkType, riskLevel, resultCode, summary });
+    const report = await UserSafetyReport.create({
+      userId: req.user.id,
+      checkType: normalizeCheckType(checkType),
+      riskLevel: ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL', 'NORMAL', 'SUSPICIOUS', 'UNKNOWN'].includes(String(riskLevel).toUpperCase()) ? String(riskLevel).toUpperCase() : 'UNKNOWN',
+      resultCode: String(resultCode || 'REPORT').slice(0, 100),
+      summary
+    });
     return res.status(201).json({ success: true, report });
-  } catch (_) { return res.status(400).json({ success: false, message: 'Report could not be saved.' }); }
+  } catch (err) {
+    console.error('Error saving user safety report:', err.message);
+    return res.status(400).json({ success: false, message: 'Report could not be saved.' });
+  }
 });
 
 module.exports = router;

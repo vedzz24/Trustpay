@@ -24,8 +24,8 @@ export default function Blog() {
       bgText: "bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-500/20"
     },
     {
-      title: "Building the TrustPay Cryptographic Engine",
-      excerpt: "A deep dive into how TrustPay generates time-locked, signed receipt tokens to completely eliminate the possibility of forged merchant screenshots.",
+      title: "Building the GuardX Cryptographic Engine",
+      excerpt: "A deep dive into how GuardX generates time-locked, signed receipt tokens to completely eliminate the possibility of forged merchant screenshots.",
       category: "Engineering",
       icon: Shield,
       color: "from-emerald-500 to-teal-500",
@@ -45,7 +45,7 @@ export default function Blog() {
             </div>
             <h1 className="text-3xl font-black text-slate-800 dark:text-white tracking-tight">Security Journal</h1>
           </div>
-          <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">Insights, threat research, and protocol updates from the TrustPay engineering team.</p>
+          <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">Insights, threat research, and protocol updates from the GuardX engineering team.</p>
         </div>
         
         <div className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2 shrink-0">
@@ -61,7 +61,7 @@ export default function Blog() {
           <div className="flex-1 space-y-6">
             <span className="px-3 py-1 bg-cyan-50 dark:bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border border-cyan-200 dark:border-cyan-500/20 text-xs font-black uppercase tracking-widest rounded-lg inline-block">Featured Report</span>
             <h2 className="text-3xl md:text-5xl font-black text-slate-800 dark:text-white leading-tight">The 2026 Financial Threat Intelligence Directive</h2>
-            <p className="text-slate-500 dark:text-slate-400 font-medium leading-relaxed md:text-lg">TrustPay's annual review of digital payments infrastructure, focusing heavily on social engineering vulnerabilities, automated bot nets, and how dynamic tokens are actively killing standard static-QR invoice scams.</p>
+            <p className="text-slate-500 dark:text-slate-400 font-medium leading-relaxed md:text-lg">GuardX's annual review of digital payments infrastructure, focusing heavily on social engineering vulnerabilities, automated bot nets, and how dynamic tokens are actively killing standard static-QR invoice scams.</p>
             <button className="flex items-center gap-2 text-cyan-600 dark:text-cyan-400 font-bold tracking-wide uppercase text-sm group-hover:underline decoration-2 underline-offset-4">
               Read Full Report <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </button>

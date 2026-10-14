@@ -13,7 +13,7 @@ export default function Footer() {
           <div className="lg:col-span-2 space-y-6">
             <div className="flex items-center gap-2 cursor-pointer group w-max">
               <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-400 to-cyan-600 flex items-center justify-center text-white font-black shadow-lg shadow-cyan-500/30 group-hover:scale-110 transition-transform duration-300">T</div>
-              <span className="text-2xl font-black bg-clip-text text-transparent bg-gradient-to-r from-slate-800 to-slate-600 dark:from-white dark:to-slate-300 tracking-tight">TrustPay</span>
+              <span className="text-2xl font-black bg-clip-text text-transparent bg-gradient-to-r from-slate-800 to-slate-600 dark:from-white dark:to-slate-300 tracking-tight">GuardX</span>
             </div>
             <p className="text-sm font-medium text-slate-500 dark:text-slate-400 leading-relaxed max-w-xs">
               Pioneering zero-trust payment architecture. Protect your family, verify merchants instantly, and neutralize digital threats with our cryptographic infrastructure.
@@ -58,11 +58,11 @@ export default function Footer() {
         {/* Bottom Bar */}
         <div className="pt-8 border-t border-slate-100 dark:border-slate-800/80 flex flex-col md:flex-row items-center justify-between gap-4">
           <p className="text-xs font-semibold text-slate-400 dark:text-slate-500">
-            © {currentYear} TrustPay Technologies Inc. All rights heavily secured.
+            © {currentYear} GuardX Technologies Inc. All rights heavily secured.
           </p>
           <div className="flex items-center gap-6">
             <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors cursor-pointer w-max group">
-              <Mail className="w-4 h-4 group-hover:scale-110 transition-transform" /> support@trustpay.tech
+              <Mail className="w-4 h-4 group-hover:scale-110 transition-transform" /> support@guardx.tech
             </div>
             <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors cursor-pointer w-max group">
               <Phone className="w-4 h-4 group-hover:scale-110 transition-transform" /> 1-800-TRUST-HQ

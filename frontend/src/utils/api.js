@@ -2,10 +2,8 @@ import { normalizeLoginResponse, resolveApiBaseUrl } from './apiConfig';
 
 export function resolveApiBase() {
   return resolveApiBaseUrl({
-    apiUrl: import.meta.env.VITE_API_URL,
-    legacyApiBaseUrl: import.meta.env.VITE_API_BASE_URL,
-    protocol: window.location.protocol,
-    hostname: window.location.hostname,
+    apiBaseUrl: import.meta.env.VITE_API_BASE_URL,
+    fallbackUrl: import.meta.env.DEV ? 'http://localhost:5000' : '',
   });
 }
 
@@ -30,17 +28,31 @@ const parseResponse = async response => {
   return { ...data, httpStatus: response.status };
 };
 
-const request = async (endpoint, options = {}) => {
+const NETWORK_MESSAGE = 'Unable to connect to GuardX. Check your internet connection and try again.';
+const REQUEST_TIMEOUT_MS = 45000;
+
+const requestOnce = async (endpoint, options = {}) => {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
   try {
-    return await fetch(getApiUrl(endpoint), options).then(parseResponse);
+    return await fetch(getApiUrl(endpoint), { ...options, signal: controller.signal }).then(parseResponse);
   } catch {
     return {
       success: false,
       httpStatus: 0,
       networkError: true,
-      message: 'Cannot connect to TrustPay server.',
+      message: NETWORK_MESSAGE,
     };
+  } finally {
+    clearTimeout(timeout);
   }
+};
+
+const request = async (endpoint, options = {}) => {
+  const first = await requestOnce(endpoint, options);
+  if (!first.networkError || options.method !== 'GET') return first;
+  // A sleeping free-tier service may need one additional safe/read-only request.
+  return requestOnce(endpoint, options);
 };
 
 const post = (endpoint, body) =>
@@ -52,6 +64,7 @@ const post = (endpoint, body) =>
 
 const get = (endpoint) =>
   request(endpoint, {
+    method: 'GET',
     headers: { ...getAuthHeader() }
   });
 const patch = (endpoint, body = {}) => request(endpoint, { method: 'PATCH', headers: { 'Content-Type': 'application/json', ...getAuthHeader() }, body: JSON.stringify(body) });
@@ -64,7 +77,7 @@ export const checkApiHealth = () => get('/health');
 if (import.meta.env.DEV) {
   checkApiHealth().then(response => {
     if (response.success || response.status === 'ok') {
-      console.info('TrustPay API: connected');
+      console.info('GuardX API: connected');
       console.info(`API base: ${API_BASE.replace(/\/api$/, '')}`);
     }
   });
@@ -86,7 +99,7 @@ export const fetchPublicMerchant = async merchantId => {
       success: false,
       httpStatus: 0,
       networkError: true,
-      message: 'Connection error. TrustPay could not reach the payment service.',
+      message: 'Connection error. GuardX could not reach the payment service.',
     };
   }
 };
@@ -124,9 +137,10 @@ export const loginSafetyUser = (email, password) => persistAuth(normalizeLoginRe
 export const fetchSafetyDashboard = () => get('/user-auth/me');
 
 // ── Guardian Protection ─────────────────────────────────────────────────────
-export const registerGuardian = (name, email, password, confirmPassword) => persistAuth(post('/guardian/register', { name, email, password, confirmPassword }));
+export const registerGuardian = (name, email, password, confirmPassword, phone) => persistAuth(post('/guardian/register', { name, email, password, confirmPassword, phoneNumber: phone }));
 export const loginGuardian = (email, password) => persistAuth(normalizeLoginRequest(post('/guardian/login', { email, password })));
 export const fetchGuardianDashboard = () => get('/guardian/dashboard');
+export const subscribeGuardianPush = subscription => post('/guardian/push-subscribe', subscription);
 export const sendGuardianLinkRequest = protectedUserEmail => post('/guardian/link-request', { protectedUserEmail });
 export const fetchProtectedUsers = () => get('/guardian/protected-users');
 export const fetchGuardianLinkRequests = () => get('/guardian/link-requests');

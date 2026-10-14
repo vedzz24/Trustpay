@@ -21,22 +21,22 @@ export default function Terms() {
 
       <motion.div variants={itemVars} className="prose prose-slate dark:prose-invert max-w-none prose-headings:font-black prose-headings:tracking-tight prose-a:text-cyan-600 dark:prose-a:text-cyan-400 prose-p:font-medium prose-p:text-slate-600 dark:prose-p:text-slate-300">
         <p className="text-lg">
-          Please read these Terms of Service ("Terms", "Terms of Service") carefully before using the TrustPay software, operated by TrustPay Technologies Inc. Your access to and use of the Service is conditioned upon your acceptance of and compliance with these Terms.
+          Please read these Terms of Service ("Terms", "Terms of Service") carefully before using the GuardX software, operated by GuardX Technologies Inc. Your access to and use of the Service is conditioned upon your acceptance of and compliance with these Terms.
         </p>
 
         <h2>1. Architecture Limitations and Liabilities</h2>
         <p>
-          TrustPay provides a cryptographic signature wrapper (the "QR Engine") designed to heavily mitigate the risk of forged transactions. <strong>TrustPay does not hold, move, broker, or process actual fiat currency.</strong> We are a security verification layer overlaying your existing UPI interface. TrustPay Technologies Inc. holds zero liability for funds lost due to direct user negligence outside the purview of our platform logic.
+          GuardX provides a cryptographic signature wrapper (the "QR Engine") designed to heavily mitigate the risk of forged transactions. <strong>GuardX does not hold, move, broker, or process actual fiat currency.</strong> We are a security verification layer overlaying your existing UPI interface. GuardX Technologies Inc. holds zero liability for funds lost due to direct user negligence outside the purview of our platform logic.
         </p>
 
         <h2>2. Guardian Node Responsibilites</h2>
         <p>
-          Users who voluntarily opt into "Safe Mode" and assign a Guardian agree to temporarily abdicate direct control of high-value transactions. Guardians bear sole responsibility for verifying the legitimacy of a requested transfer. TrustPay cannot forcefully execute or forcefully cancel a transaction that a Guardian has legally clicked "Approve" on.
+          Users who voluntarily opt into "Safe Mode" and assign a Guardian agree to temporarily abdicate direct control of high-value transactions. Guardians bear sole responsibility for verifying the legitimacy of a requested transfer. GuardX cannot forcefully execute or forcefully cancel a transaction that a Guardian has legally clicked "Approve" on.
         </p>
 
         <h2>3. Acceptable Use of the Forensic Analyzer</h2>
         <p>
-          The TrustPay Text Forensics AI is designed to catch known scam vectors. It is strictly forbidden to:
+          The GuardX Text Forensics AI is designed to catch known scam vectors. It is strictly forbidden to:
         </p>
         <ul>
           <li>Reverse-engineer the AI endpoint logic.</li>

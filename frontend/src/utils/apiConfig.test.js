@@ -2,16 +2,16 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { normalizeLoginResponse, resolveApiBaseUrl } from './apiConfig.js';
 
-test('uses localhost when the frontend is opened through localhost', () => {
-  assert.equal(resolveApiBaseUrl({ protocol: 'http:', hostname: 'localhost' }), 'http://localhost:5000/api');
+test('uses localhost when no API base URL is configured', () => {
+  assert.equal(resolveApiBaseUrl({ fallbackUrl: 'http://localhost:5000' }), 'http://localhost:5000/api');
 });
 
-test('uses the current private-LAN host without pinning an address', () => {
-  assert.equal(resolveApiBaseUrl({ protocol: 'http:', hostname: '192.168.29.237' }), 'http://192.168.29.237:5000/api');
+test('configured production origin receives the API prefix', () => {
+  assert.equal(resolveApiBaseUrl({ apiBaseUrl: 'https://trustpay-api.onrender.com' }), 'https://trustpay-api.onrender.com/api');
 });
 
-test('VITE_API_URL-style configuration overrides automatic detection', () => {
-  assert.equal(resolveApiBaseUrl({ apiUrl: 'https://api.example.com/' }), 'https://api.example.com/api');
+test('configured API URL is not given a duplicate API prefix', () => {
+  assert.equal(resolveApiBaseUrl({ apiBaseUrl: 'https://api.example.com/api/' }), 'https://api.example.com/api');
 });
 
 test('login errors distinguish network, credentials, role, and server failures', () => {

@@ -1,8 +1,8 @@
 <div align="center">
-  <img src="logo.png" alt="TrustPay Logo" height="150" />
+  <img src="logo.png" alt="GuardX Logo" height="150" />
 </div>
 
-# TrustPay — India's Payment Trust Layer
+# GuardX — India's Payment Trust Layer
 A production-ready Indian fintech platform where users generate cryptographic QR payment proofs and merchants verify them instantly — eliminating fake payment scams.
 
 ---
@@ -117,7 +117,7 @@ You should see:
 ```
 ✅ Connected to MongoDB
 🌱 Seeded 10 demo payments into MongoDB.
-🚀 TrustPay backend running → http://localhost:5000
+🚀 GuardX backend running → http://localhost:5000
 ```
 
 > On the **second run**, seeding is skipped since data already exists.

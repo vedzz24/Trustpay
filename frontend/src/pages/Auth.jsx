@@ -3,6 +3,7 @@ import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion'
 import { ArrowRight, Check, ChevronDown, Fingerprint, LockKeyhole, Menu, Play, ShieldCheck, Sparkles, Sun, Moon, UserRound, X, Zap } from 'lucide-react';
 import { login, signup, sendOtp, verifyOtp, googleLogin, completeAuthOnboarding } from '../utils/api';
 import { Link } from 'react-router-dom';
+import { Capacitor } from '@capacitor/core';
 
 const HERO_VIDEO = 'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260823_050407_500d0339-ab28-41c1-9688-132a74a3b5aa.mp4';
 const ABOUT_VIDEO = 'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260823_063501_2e2c8971-de1e-473a-8611-a0c9ae7ee186.mp4';
@@ -92,7 +93,7 @@ export default function Auth({ setUser, addToast, theme, toggleTheme }) {
         setStatusText('');
       }
     } catch {
-      setAuthError('Cannot connect to TrustPay server.');
+      setAuthError('Cannot connect to GuardX server.');
       setStatusText('');
     } finally {
       setLoading(false);
@@ -132,7 +133,7 @@ export default function Auth({ setUser, addToast, theme, toggleTheme }) {
         setStatusText('');
       }
     } catch {
-      setAuthError('Cannot connect to TrustPay server.');
+      setAuthError('Cannot connect to GuardX server.');
       setStatusText('');
     } finally {
       setLoading(false);
@@ -199,11 +200,11 @@ export default function Auth({ setUser, addToast, theme, toggleTheme }) {
       <header className="fixed inset-x-0 top-0 z-50 px-4 py-4 md:px-8">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between rounded-xl border border-slate-300 dark:border-white/10 bg-[#F2F1F0]/90 dark:bg-[#111]/90 px-6 shadow-md backdrop-blur-xl transition-all">
           <a href="#top" className="flex items-center gap-3">
-            <span className="grid h-9 w-9 place-items-center rounded-lg bg-[#15BCDF] text-white">
-              <ShieldCheck className="h-5 w-5"/>
-            </span>
+            <img src="/guardx-icon.svg" alt="GuardX" className="h-9 w-9 rounded-lg shadow-md object-contain" />
+
+
             <span className="text-xl font-bold uppercase tracking-wider text-[#2b3033] dark:text-white">
-              trustpay<span className="text-[#15BCDF]">.</span>
+              guardx<span className="text-[#15BCDF]">.</span>
             </span>
           </a>
           
@@ -268,17 +269,17 @@ export default function Auth({ setUser, addToast, theme, toggleTheme }) {
           <motion.div style={{ y: heroY, opacity: heroOpacity }} className="relative z-20 mx-auto w-full max-w-7xl pt-[360px] md:pt-0">
             
             {/* Staircase Headline */}
-            <h1 className="max-w-5xl text-[clamp(34px,7.6vw,80px)] font-bold leading-[0.98] uppercase tracking-wide text-[#2b3033] dark:text-white">
+            <h1 className="max-w-5xl text-4xl sm:text-6xl lg:text-8xl font-bold leading-[0.98] uppercase tracking-wide text-[#2b3033] dark:text-white">
               SCALING<br/>
               THE<br/>
               PLATFORM<br/>
-              <span className="block pl-[min(238px,28vw)]">FOR</span>
-              <span className="block pl-[min(238px,28vw)]">YOUR</span>
-              <span className="block pl-[min(238px,28vw)] text-[#15BCDF]">BUSINESS</span>
+              <span className="block pl-12 sm:pl-32 lg:pl-64">FOR</span>
+              <span className="block pl-12 sm:pl-32 lg:pl-64">YOUR</span>
+              <span className="block pl-12 sm:pl-32 lg:pl-64 text-[#15BCDF]">BUSINESS</span>
             </h1>
 
             {/* CTA Button */}
-            <div className="mt-8 pl-[min(238px,28vw)]">
+            <div className="mt-8 pl-12 sm:pl-32 lg:pl-64">
               <button 
                 onClick={() => openAuth(false)} 
                 className="btn-chamfered relative group flex items-center justify-center gap-3 bg-[#15BCDF] hover:bg-[#3fd0ef] border border-[#0fa3c2] px-8 py-4.5 text-xs font-bold uppercase tracking-[0.14em] text-[#1a1c1e] transition-all"
@@ -312,7 +313,7 @@ export default function Auth({ setUser, addToast, theme, toggleTheme }) {
 
             {/* Copy verbatim */}
             <p className="mt-[32px] ml-[min(160px,18vw)] text-[clamp(14px,1.6vw,17px)] line-height-[1.7] text-[#6b6f72] dark:text-slate-350 font-medium">
-              TrustPay secures every transaction with military-grade encryption and real-time fraud detection. Your peace of mind is our top priority, ensuring safe, seamless, and transparent payments every time.
+              GuardX secures every transaction with military-grade encryption and real-time fraud detection. Your peace of mind is our top priority, ensuring safe, seamless, and transparent payments every time.
             </p>
 
             {/* Learn More Button */}
@@ -363,14 +364,14 @@ export default function Auth({ setUser, addToast, theme, toggleTheme }) {
                 </h2>
               </div>
               <p className="max-w-lg text-sm leading-relaxed text-[#6b6f72] dark:text-slate-450 lg:justify-self-end font-medium">
-                TrustPay combines QR verification, text threat analysis, live payment confirmations, and linked Guardian alerts inside one central Payment Trust Engine.
+                GuardX combines QR verification, text threat analysis, live payment confirmations, and linked Guardian alerts inside one central Payment Trust Engine.
               </p>
             </div>
             
             <div className="grid gap-6 md:grid-cols-12">
               <Feature onClick={() => { openAuth(true); addToast('Please sign in to access this feature', 'info'); }} wide n="01" icon={Fingerprint} title="PAYMENT PROOF ANALYZER" text="Analyze digital screenshots and transactions to check font consistency and editing artifacts in second-level canvas forensics."/>
               <Feature onClick={() => { openAuth(true); addToast('Please sign in to access this feature', 'info'); }} n="02" icon={Zap} title="LIVE MATCH ENGINE" text="Simulated server logs confirm settlement status before authorizing item exchanges."/>
-              <Feature onClick={() => { openAuth(true); addToast('Please sign in to access this feature', 'info'); }} n="03" icon={UserRound} title="GUARDIAN PROTECTION" text="Share HIGH and CRITICAL TrustPay safety alerts with a trusted linked Guardian."/>
+              <Feature onClick={() => { openAuth(true); addToast('Please sign in to access this feature', 'info'); }} n="03" icon={UserRound} title="GUARDIAN PROTECTION" text="Share HIGH and CRITICAL GuardX safety alerts with a trusted linked Guardian."/>
               <Feature onClick={() => { openAuth(true); addToast('Please sign in to access this feature', 'info'); }} wide n="04" icon={Sparkles} title="TRANSACTION REGISTRY" text="Generate dynamic HMAC time-locked QR codes to maintain structural receipt hashes securely."/>
             </div>
           </motion.div>
@@ -401,7 +402,7 @@ export default function Auth({ setUser, addToast, theme, toggleTheme }) {
       {/* Redesigned Footer */}
       <footer className="border-t border-slate-300 dark:border-white/10 px-6 py-12 bg-[#F2F1F0] dark:bg-[#111]">
         <div className="mx-auto flex max-w-7xl flex-col gap-6 text-xs font-bold uppercase tracking-wider text-slate-500 md:flex-row md:justify-between items-center">
-          <p>© 2026 TrustPay. Secure Digital Payment Verification System.</p>
+          <p>© 2026 GuardX. Secure Digital Payment Verification System.</p>
           <div className="flex gap-6 items-center">
             <a href="#security" className="hover:text-[#15BCDF] transition-colors">Security</a>
             <button onClick={() => openAuth(true)} className="hover:text-[#15BCDF] transition-colors uppercase font-bold text-xs">Sign in</button>
@@ -483,12 +484,14 @@ export default function Auth({ setUser, addToast, theme, toggleTheme }) {
                 <span className="h-px flex-1 bg-slate-300 dark:bg-white/10"/>or<span className="h-px flex-1 bg-slate-300 dark:bg-white/10"/>
               </div>
               
-              <button disabled={loading} onClick={startGoogleLogin} className="flex w-full items-center justify-center gap-3 rounded-lg border border-slate-355 dark:border-white/10 py-3.5 text-xs font-bold uppercase tracking-wider hover:bg-slate-200 dark:hover:bg-white/5 transition-all text-[#2b3033] dark:text-white disabled:opacity-50">
-                <GoogleIcon/>{loading && statusText === 'Connecting to Google...' ? 'Connecting to Google...' : 'Continue with Google'}
-              </button>
+              {!Capacitor.isNativePlatform() && (
+                <button disabled={loading} onClick={startGoogleLogin} className="flex w-full items-center justify-center gap-3 rounded-lg border border-slate-355 dark:border-white/10 py-3.5 text-xs font-bold uppercase tracking-wider hover:bg-slate-200 dark:hover:bg-white/5 transition-all text-[#2b3033] dark:text-white disabled:opacity-50">
+                  <GoogleIcon/>{loading && statusText === 'Connecting to Google...' ? 'Connecting to Google...' : 'Continue with Google'}
+                </button>
+              )}
               
               <p className="mt-6 text-center text-xs font-bold uppercase tracking-wider text-slate-500">
-                {isLogin ? 'New to TrustPay?' : 'Already registered?'} <button type="button" onClick={() => setIsLogin(v => !v)} className="text-[#15BCDF] hover:underline hover:underline-offset-4 font-bold">{isLogin ? 'Register account' : 'Sign in'}</button>
+                {isLogin ? 'New to GuardX?' : 'Already registered?'} <button type="button" onClick={() => setIsLogin(v => !v)} className="text-[#15BCDF] hover:underline hover:underline-offset-4 font-bold">{isLogin ? 'Register account' : 'Sign in'}</button>
               </p>
               
             </motion.div>

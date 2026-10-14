@@ -9,7 +9,7 @@ function downloadPDF(metrics, hourlyData) {
   const peak = hourlyData.reduce((a, b) => a.volume > b.volume ? a : b, { hour: '-', volume: 0 });
   const w = window.open('', '_blank');
   if (!w) { alert('Allow pop-ups to download the PDF.'); return; }
-  w.document.write(`<!DOCTYPE html><html><head><title>TrustPay Report</title>
+  w.document.write(`<!DOCTYPE html><html><head><title>GuardX Report</title>
   <style>
     body{font-family:Georgia,serif;padding:48px;color:#4E2F12;background:#FAF4EB}
     h1{color:#8B5E34;font-size:28px;margin:0 0 4px}
@@ -24,7 +24,7 @@ function downloadPDF(metrics, hourlyData) {
     th{font-weight:700;background:#FDF0E0}
     @media print{body{padding:20px}}
   </style></head><body>
-  <h1>TrustPay Summary Report</h1>
+  <h1>GuardX Summary Report</h1>
   <p class="sub">Generated: ${new Date().toLocaleString('en-IN')}</p>
   <div class="grid">
     <div class="card"><label>Total</label><span class="blue">${metrics.total}</span></div>

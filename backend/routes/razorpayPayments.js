@@ -2,6 +2,7 @@ const router = require('express').Router();
 const User = require('../models/User');
 const RazorpayOrderOwner = require('../models/RazorpayOrderOwner');
 const { getMerchantModels } = require('../utils/merchantDb');
+const { broadcastToMerchant } = require('../utils/sse');
 const { recordSecurityEvent } = require('../utils/securityEvents');
 const {
   amountToPaise, createTrustPayId, getPublicKeyId, getRazorpayClient, verifyCheckoutSignature,
@@ -92,6 +93,7 @@ router.post('/verify', async (req, res) => {
       payment.webhookSignatureValid = true;
       payment.verifiedAt = new Date();
       await payment.save();
+      broadcastToMerchant(owner.merchantId, 'payment_updated', payment);
       await recordEventSafely(owner.merchantId, {
         type: 'PAYMENT_VERIFIED', severity: 'INFO', paymentId, orderId,
         transactionId: payment.txnId, message: `₹${payment.amount} payment verified.`, status: 'VERIFIED',

@@ -1,0 +1,11 @@
+{
+  "appId": "com.trustpay.app",
+  "appName": "TrustPay",
+  "webDir": "dist",
+  "server": {
+    "cleartext": true
+  },
+  "android": {
+    "allowMediaPlaybackWithoutUserGesture": true
+  }
+}

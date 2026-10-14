@@ -48,7 +48,7 @@ function analyzeQrPayload(raw) {
   const value = String(raw || '').trim();
   if (!value) return { result: 'INVALID_QR', type: 'UNKNOWN', reasons: ['No decodable QR content was supplied.'] };
   if (/^upi:\/\/pay\?/i.test(value)) {
-    try { return { result: 'UNKNOWN', risk: 'UNKNOWN', reasons: ['TrustPay could not independently establish whether this recipient is trustworthy.'], ...parseUpi(value) }; }
+    try { return { result: 'UNKNOWN', risk: 'UNKNOWN', reasons: ['GuardX could not independently establish whether this recipient is trustworthy.'], ...parseUpi(value) }; }
     catch (_) { return { result: 'INVALID_QR', type: 'UPI PAYMENT', reasons: ['The UPI payment URI is malformed.'] }; }
   }
   if (/^[a-z][a-z0-9+.-]*:/i.test(value)) {
@@ -61,7 +61,7 @@ function analyzeQrPayload(raw) {
     if (url.username || url.password || /@/.test(url.host)) reasons.push('The link contains deceptive user-information syntax.');
     return { type: 'WEB URL', domain: url.hostname || null, result: reasons.length ? 'SUSPICIOUS' : 'NORMAL', risk: reasons.length ? 'SUSPICIOUS' : 'NORMAL', reasons };
   }
-  return { type: 'TEXT', result: 'UNKNOWN', risk: 'UNKNOWN', reasons: ['The QR contains text that TrustPay cannot independently verify.'] };
+  return { type: 'TEXT', result: 'UNKNOWN', risk: 'UNKNOWN', reasons: ['The QR contains text that GuardX cannot independently verify.'] };
 }
 
 module.exports = { analyzeMessage, analyzeQrPayload, redactOtp };

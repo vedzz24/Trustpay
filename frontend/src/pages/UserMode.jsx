@@ -95,7 +95,7 @@ export default function UserMode({ addToast, user }) {
                   GUARDIAN MODE
                   <ArrowRight className="w-4 h-4 text-slate-400 group-hover:translate-x-1 transition-transform" />
                 </h3>
-                <p className="text-[10px] text-[#6b6f72] dark:text-slate-450 mt-1 font-semibold">Link a trusted Guardian for HIGH and CRITICAL TrustPay safety alerts.</p>
+                <p className="text-[10px] text-[#6b6f72] dark:text-slate-450 mt-1 font-semibold">Link a trusted Guardian for HIGH and CRITICAL GuardX safety alerts.</p>
               </div>
             </Link>
 
@@ -118,7 +118,7 @@ export default function UserMode({ addToast, user }) {
           <div className="bg-white/60 dark:bg-[#1a1c1e] p-6 lg:p-8 rounded-xl border border-slate-300 dark:border-white/10 space-y-6">
             <div className="flex items-center gap-3">
               <QrCode className="w-6 h-6 text-[#15BCDF]" />
-              <h2 className="text-base font-bold uppercase tracking-wider text-[#2b3033] dark:text-white">Verify TrustPay QR Generator</h2>
+              <h2 className="text-base font-bold uppercase tracking-wider text-[#2b3033] dark:text-white">Verify GuardX QR Generator</h2>
             </div>
             
             <form onSubmit={handleProof} className="grid grid-cols-1 sm:grid-cols-2 gap-4">

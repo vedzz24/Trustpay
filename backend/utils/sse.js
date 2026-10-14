@@ -4,16 +4,18 @@ function sseHandler(req, res) {
   res.setHeader('Content-Type', 'text/event-stream');
   res.setHeader('Cache-Control', 'no-cache');
   res.setHeader('Connection', 'keep-alive');
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('X-Accel-Buffering', 'no');
   res.flushHeaders();
 
   // Send initial signal
   res.write(`data: ${JSON.stringify({ type: 'connected' })}\n\n`);
 
   clients.push({ res, merchantId: req.user?.merchantId || null });
+  const heartbeat = setInterval(() => res.write(': keep-alive\n\n'), 25000);
   console.log(`📡 SSE client connected. Active connections: ${clients.length}`);
 
   req.on('close', () => {
+    clearInterval(heartbeat);
     clients = clients.filter(client => client.res !== res);
     console.log(`📡 SSE client disconnected. Active connections: ${clients.length}`);
   });

@@ -22,7 +22,7 @@ export default function Navigation({ theme, toggleTheme }) {
               T
             </div>
             <span className="text-xl font-bold neon-text tracking-wider">
-              TrustPay
+              GuardX
             </span>
           </div>
           
@@ -41,7 +41,7 @@ export default function Navigation({ theme, toggleTheme }) {
 
         {/* Mobile Header (Shows Logo and Toggle) */}
         <div className="sm:hidden absolute -top-14 left-0 right-0 px-4 py-2 flex items-center justify-between glass-panel rounded-t-2xl shadow-[0_-10px_30px_rgba(0,245,255,0.1)]">
-          <span className="text-lg font-black neon-text">TrustPay</span>
+          <span className="text-lg font-black neon-text">GuardX</span>
           <button onClick={toggleTheme} className="p-2">
             {theme === 'dark' ? <Sun className="w-5 h-5 text-cyber-cyan" /> : <Moon className="w-5 h-5 text-cyber-purple" />}
           </button>

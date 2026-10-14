@@ -1,5 +1,6 @@
 const RazorpayOrderOwner = require('../models/RazorpayOrderOwner');
 const { getMerchantModels } = require('../utils/merchantDb');
+const { broadcastToMerchant } = require('../utils/sse');
 const { recordSecurityEvent } = require('../utils/securityEvents');
 const { verifyWebhookSignature } = require('../services/razorpay');
 const recordEventSafely = (...args) => recordSecurityEvent(...args)
@@ -83,6 +84,7 @@ async function razorpayWebhook(req, res) {
       transaction.webhookSignatureValid = true;
       transaction.verifiedAt ||= new Date();
       await transaction.save();
+      broadcastToMerchant(owner.merchantId, 'payment_updated', transaction);
       if (!wasVerified) await recordEventSafely(owner.merchantId, {
         type: 'PAYMENT_VERIFIED', severity: 'INFO', paymentId: transaction.razorpayPaymentId,
         orderId, transactionId: transaction.txnId, message: `₹${transaction.amount} payment verified.`, status: 'VERIFIED',
@@ -95,6 +97,7 @@ async function razorpayWebhook(req, res) {
       if (gatewayPayment?.method) transaction.method = gatewayPayment.method;
       transaction.webhookSignatureValid = true;
       await transaction.save();
+      broadcastToMerchant(owner.merchantId, 'payment_updated', transaction);
       await recordEventSafely(owner.merchantId, {
         type: 'PAYMENT_FAILED', severity: 'WARNING', paymentId: transaction.razorpayPaymentId,
         orderId, transactionId: transaction.txnId, message: 'Razorpay payment failed.', status: 'FAILED',

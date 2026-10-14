@@ -1,11 +1,10 @@
-export function resolveApiBaseUrl({ apiUrl = '', legacyApiBaseUrl = '', protocol = 'http:', hostname = 'localhost' } = {}) {
-  const configuredServer = String(apiUrl).trim().replace(/\/+$/, '');
+export function resolveApiBaseUrl({ apiBaseUrl = '', fallbackUrl = '' } = {}) {
+  const configuredServer = String(apiBaseUrl).trim().replace(/\/+$/, '');
   if (configuredServer) return configuredServer.endsWith('/api') ? configuredServer : `${configuredServer}/api`;
 
-  const legacyBase = String(legacyApiBaseUrl).trim().replace(/\/+$/, '');
-  if (legacyBase) return legacyBase;
-
-  return `${protocol}//${hostname || 'localhost'}:5000/api`;
+  const fallbackServer = String(fallbackUrl).trim().replace(/\/+$/, '');
+  if (fallbackServer) return fallbackServer.endsWith('/api') ? fallbackServer : `${fallbackServer}/api`;
+  throw new Error('GuardX API URL is not configured.');
 }
 
 export function normalizeLoginResponse(response) {

@@ -1,7 +1,11 @@
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
 const User = require('../models/User');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'trustpay_super_secret_jwt_key_123';
+const JWT_SECRET = process.env.JWT_SECRET || crypto.randomBytes(48).toString('hex');
+if (!process.env.JWT_SECRET) {
+  console.warn('⚠️ JWT_SECRET is not configured; sessions will reset when this development process restarts.');
+}
 
 async function authenticateToken(req, res, next) {
   const authHeader = req.headers['authorization'];

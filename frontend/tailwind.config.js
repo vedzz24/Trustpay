@@ -1,3 +1,5 @@
+const plugin = require('tailwindcss/plugin');
+
 /** @type {import('tailwindcss').Config} */
 export default {
   darkMode: 'class',
@@ -72,5 +74,8 @@ export default {
   },
   plugins: [
     require('@tailwindcss/typography'),
+    plugin(function({ addVariant }) {
+      addVariant('simple', '.simple-mode &');
+    }),
   ],
 }

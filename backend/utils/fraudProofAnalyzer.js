@@ -54,6 +54,9 @@ function extractPaymentInformation(rawText) {
   const referenceId = firstMatch(text, [/(?:reference|ref)\s*(?:id|no)?\s*[:#-]?\s*([A-Za-z0-9_-]{6,})/i]);
   const merchantId = firstMatch(text, [/\b(MER\d{3,})\b/i]);
   const payee = firstMatch(text, [/(?:paid to|sent to|received by|payee)\s*[:#-]?\s*([A-Za-z][A-Za-z0-9 .&'-]{2,40})/i]);
+  const payer = firstMatch(text, [/(?:paid by|sent by|from|debited from)\s*[:#-]?\s*([A-Za-z][A-Za-z0-9 .&'-]{2,30})/i]);
+  const upiId = firstMatch(text, [/\b([a-zA-Z0-9.\-_]{2,40}@[a-zA-Z]{2,20})\b/i]);
+  const bank = firstMatch(text, [/\b(State Bank of India|SBI|HDFC|ICICI|Axis Bank|Kotak|Bank of Baroda|Paytm Payments Bank|Punjab National Bank|Canara Bank)\b/i]);
   const paymentStatus = firstMatch(text, [/\b(payment successful|successful|success|completed|captured|failed|pending|paid)\b/i]);
   const paymentMethod = firstMatch(text, [/\b(UPI|credit card|debit card|net banking|wallet|IMPS|NEFT)\b/i]);
   const date = firstMatch(text, [/\b(\d{1,2}[\/-]\d{1,2}[\/-]\d{2,4})\b/, /\b(\d{1,2}\s+(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+\d{2,4})\b/i]);
@@ -62,7 +65,8 @@ function extractPaymentInformation(rawText) {
     claimedAmount: amountText ? Number(amountText.replace(/,/g, '')) : null,
     transactionId, referenceId, utr, paymentId, orderId,
     merchantId: merchantId?.toUpperCase() || null,
-    payee, paymentStatus: paymentStatus?.toUpperCase() || null,
+    payee, payer, upiId, bank,
+    paymentStatus: paymentStatus?.toUpperCase() || null,
     date, time, paymentMethod: paymentMethod?.toUpperCase() || null,
   };
 }

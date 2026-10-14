@@ -1,10 +1,10 @@
 import { NavLink } from 'react-router-dom';
 /* eslint-disable react/prop-types */
-import { LayoutDashboard, BarChart3, Shield, LogOut, Sun, Moon, Menu, X, ShieldCheck, BookOpen, Lock, QrCode, ClipboardList, Users, Bell } from 'lucide-react';
+import { LayoutDashboard, BarChart3, Shield, LogOut, Sun, Moon, Menu, X, ShieldCheck, BookOpen, Lock, QrCode, ClipboardList, Users, Bell, Type } from 'lucide-react';
 import { useState } from 'react';
 import { cn } from '../utils/cn';
 
-export default function Navbar({ user, logout, theme, toggleTheme }) {
+export default function Navbar({ user, logout, theme, toggleTheme, simpleMode, toggleSimpleMode }) {
   const [open, setOpen] = useState(false);
   if (!user) return null;
 
@@ -36,15 +36,13 @@ export default function Navbar({ user, logout, theme, toggleTheme }) {
   const inactiveLink = 'text-[#3a3a3a] dark:text-slate-300 hover:text-[#15BCDF] dark:hover:text-white hover:bg-slate-200/50 dark:hover:bg-slate-800/40';
 
   return (
-    <nav className="fixed top-0 inset-x-0 z-50 h-16 bg-[#F2F1F0]/90 dark:bg-[#111]/90 backdrop-blur-xl border-b border-slate-300 dark:border-white/10 shadow-sm font-sans">
+    <nav className="fixed top-0 inset-x-0 z-50 h-16 bg-[#F2F1F0]/90 dark:bg-[#111]/90 backdrop-blur-xl border-b border-slate-300 dark:border-white/10 shadow-sm font-sans" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
       <div className="max-w-7xl mx-auto px-4 h-full flex items-center justify-between gap-6">
 
         {/* Logo */}
         <div className="flex items-center gap-3 shrink-0 cursor-pointer">
-          <div className="w-9 h-9 rounded-lg bg-[#15BCDF] flex items-center justify-center text-white shadow-md">
-            <ShieldCheck className="w-5 h-5" />
-          </div>
-          <span className="text-sm font-bold tracking-wider uppercase text-[#2b3033] dark:text-white">trustpay<span className="text-[#15BCDF]">.</span></span>
+          <img src="/guardx-icon.svg" alt="GuardX" className="w-9 h-9 rounded-lg shadow-md object-contain" />
+          <span className="text-sm font-bold tracking-wider uppercase text-[#2b3033] dark:text-white">guardx<span className="text-[#15BCDF]">.</span></span>
         </div>
 
         {/* Desktop links */}
@@ -64,6 +62,11 @@ export default function Navbar({ user, logout, theme, toggleTheme }) {
 
         {/* Right controls */}
         <div className="flex items-center gap-3 shrink-0">
+          {/* Simple mode toggle */}
+          <button onClick={toggleSimpleMode} className={`p-2 rounded-lg transition-colors hidden sm:block ${simpleMode ? 'bg-[#15BCDF]/20 text-[#15BCDF]' : 'text-slate-500 dark:text-slate-350 hover:bg-slate-200 dark:hover:bg-slate-800'}`} title="Toggle Simple Mode">
+            <Type className="w-5 h-5" />
+          </button>
+
           {/* Theme toggle */}
           <button onClick={toggleTheme} className="p-2 rounded-lg text-slate-500 dark:text-slate-350 hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors">
             {theme === 'dark' ? <Sun className="w-5 h-5 text-amber-400" /> : <Moon className="w-5 h-5" />}
