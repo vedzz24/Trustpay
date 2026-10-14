@@ -197,13 +197,12 @@ export default function Auth({ setUser, addToast, theme, toggleTheme }) {
     <div className="landing-shell min-h-screen bg-[#F2F1F0] dark:bg-[#111] text-[#2b3033] dark:text-white selection:bg-[#15BCDF] selection:text-white font-sans transition-colors duration-500">
       
       {/* Header */}
-      <header className="fixed inset-x-0 top-0 z-50 px-4 py-4 md:px-8">
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between rounded-xl border border-slate-300 dark:border-white/10 bg-[#F2F1F0]/90 dark:bg-[#111]/90 px-6 shadow-md backdrop-blur-xl transition-all">
-          <a href="#top" className="flex items-center gap-3">
-            <img src="/guardx-icon.svg" alt="GuardX" className="h-9 w-9 rounded-lg shadow-md object-contain" />
+      <header className="fixed inset-x-0 top-0 z-50 px-3 py-3 sm:px-6 sm:py-4 md:px-8">
+        <div className="mx-auto flex h-14 sm:h-16 max-w-7xl items-center justify-between rounded-xl border border-slate-300 dark:border-white/10 bg-[#F2F1F0]/90 dark:bg-[#111]/90 px-4 sm:px-6 shadow-md backdrop-blur-xl transition-all">
+          <a href="#top" className="flex items-center gap-2.5 sm:gap-3">
+            <img src="/guardx-icon.svg" alt="GuardX" className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg shadow-md object-contain" />
 
-
-            <span className="text-xl font-bold uppercase tracking-wider text-[#2b3033] dark:text-white">
+            <span className="text-lg sm:text-xl font-bold uppercase tracking-wider text-[#2b3033] dark:text-white">
               guardx<span className="text-[#15BCDF]">.</span>
             </span>
           </a>
@@ -226,21 +225,31 @@ export default function Auth({ setUser, addToast, theme, toggleTheme }) {
             </button>
           </div>
           
-          <button onClick={() => setMobile(v => !v)} aria-label="Open menu" className="grid h-10 w-10 place-items-center rounded-lg border border-slate-350 dark:border-white/10 md:hidden text-slate-800 dark:text-white">
-            {mobile ? <X className="h-5 w-5"/> : <Menu className="h-5 w-5"/>}
-          </button>
+          <div className="flex items-center gap-2 md:hidden">
+            <button onClick={toggleTheme} aria-label="Toggle theme" className="grid h-9 w-9 place-items-center rounded-lg border border-slate-300 dark:border-white/10 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-700 dark:text-slate-300">
+              {theme === 'dark' ? <Sun className="h-4 w-4 text-amber-400"/> : <Moon className="h-4 w-4"/>}
+            </button>
+            <button onClick={() => setMobile(v => !v)} aria-label="Open menu" className="grid h-9 w-9 place-items-center rounded-lg border border-slate-300 dark:border-white/10 text-slate-800 dark:text-white">
+              {mobile ? <X className="h-4 w-4"/> : <Menu className="h-4 w-4"/>}
+            </button>
+          </div>
         </div>
         
         {mobile && (
           <div className="mx-auto mt-2 max-w-7xl rounded-xl border border-slate-350 dark:border-white/10 bg-[#F2F1F0] dark:bg-[#1a1c1e] p-4 shadow-xl md:hidden">
             <nav className="flex flex-col font-bold text-xs uppercase tracking-wider text-[#3a3a3a] dark:text-slate-300">
-              <a className="p-3 hover:bg-slate-200 dark:hover:bg-white/5 rounded-lg" href="#platform">Platform</a>
-              <a className="p-3 hover:bg-slate-200 dark:hover:bg-white/5 rounded-lg" href="#security">Security</a>
-              <a className="p-3 hover:bg-slate-200 dark:hover:bg-white/5 rounded-lg" href="#how">How it works</a>
+              <a onClick={() => setMobile(false)} className="p-3 hover:bg-slate-200 dark:hover:bg-white/5 rounded-lg" href="#platform">Platform</a>
+              <a onClick={() => setMobile(false)} className="p-3 hover:bg-slate-200 dark:hover:bg-white/5 rounded-lg" href="#security">Security</a>
+              <a onClick={() => setMobile(false)} className="p-3 hover:bg-slate-200 dark:hover:bg-white/5 rounded-lg" href="#how">How it works</a>
             </nav>
-            <button onClick={() => openAuth(false)} className="w-full mt-3 rounded-lg bg-[#15BCDF] p-3 text-xs font-bold uppercase tracking-wider text-[#111]">
-              Get started
-            </button>
+            <div className="mt-3 grid grid-cols-2 gap-2">
+              <button onClick={() => { openAuth(true); setMobile(false); }} className="rounded-lg border border-slate-300 dark:border-white/15 p-3 text-xs font-bold uppercase tracking-wider text-[#3a3a3a] dark:text-white hover:bg-slate-200 dark:hover:bg-white/5">
+                Sign in
+              </button>
+              <button onClick={() => { openAuth(false); setMobile(false); }} className="rounded-lg bg-[#15BCDF] p-3 text-xs font-bold uppercase tracking-wider text-[#111]">
+                Get started
+              </button>
+            </div>
           </div>
         )}
       </header>
@@ -248,12 +257,12 @@ export default function Auth({ setUser, addToast, theme, toggleTheme }) {
       <main id="top">
         
         {/* Section 1 — Hero */}
-        <section className="relative flex min-h-[100svh] items-end overflow-hidden px-6 pb-16 pt-32 md:px-12 md:pb-24 bg-[#F2F1F0] dark:bg-[#111]">
+        <section className="relative flex flex-col md:flex-row md:items-end justify-center md:justify-between min-h-[100svh] overflow-hidden px-4 sm:px-6 md:px-12 pt-16 md:pt-32 pb-8 md:pb-24 bg-[#F2F1F0] dark:bg-[#111] gap-4 sm:gap-6 md:gap-0">
           
-          {/* Background Video */}
+          {/* Desktop Background Video — Exactly as designed for desktop */}
           <video 
             ref={heroVideoRef}
-            className="absolute top-0 right-[-20%] md:right-[-10%] w-[119%] md:w-[99%] h-auto object-contain pointer-events-none z-0 opacity-80 mix-blend-multiply dark:mix-blend-normal"
+            className="hidden md:block absolute top-0 right-[-10%] w-[99%] h-auto object-contain pointer-events-none z-0 opacity-80 mix-blend-multiply dark:mix-blend-normal"
             autoPlay 
             muted 
             loop 
@@ -266,23 +275,51 @@ export default function Auth({ setUser, addToast, theme, toggleTheme }) {
           {/* Desktop Left Scrim */}
           <div className="hidden md:block absolute inset-0 left-0 w-[70%] bg-gradient-to-r from-[#F2F1F0] via-[#F2F1F0] to-transparent dark:from-[#111] dark:via-[#111] z-10 pointer-events-none" />
           
-          <motion.div style={{ y: heroY, opacity: heroOpacity }} className="relative z-20 mx-auto w-full max-w-7xl pt-[360px] md:pt-0">
+          {/* Mobile Hero Visual — Centered, feather-edged, naturally scaled */}
+          <div className="md:hidden w-full flex justify-center items-center z-10 my-1">
+            <div className="relative w-full max-w-[270px] sm:max-w-[340px] overflow-hidden rounded-2xl">
+              <video 
+                className="w-full h-auto object-contain pointer-events-none opacity-85 dark:opacity-90 mix-blend-multiply dark:mix-blend-normal"
+                autoPlay 
+                muted 
+                loop 
+                playsInline
+                preload="auto"
+              >
+                <source src={HERO_VIDEO} type="video/mp4"/>
+              </video>
+              <div className="absolute inset-0 bg-gradient-to-t from-[#F2F1F0] via-transparent to-transparent dark:from-[#111] dark:via-transparent dark:to-transparent pointer-events-none" />
+              <div className="absolute inset-0 bg-gradient-to-b from-[#F2F1F0] via-transparent to-transparent dark:from-[#111] dark:via-transparent dark:to-transparent pointer-events-none" />
+              <div className="absolute inset-0 bg-gradient-to-r from-[#F2F1F0] via-transparent to-[#F2F1F0] dark:from-[#111] dark:via-transparent dark:to-[#111] pointer-events-none" />
+            </div>
+          </div>
+
+          <motion.div style={{ y: heroY, opacity: heroOpacity }} className="relative z-20 mx-auto md:mx-0 w-full max-w-7xl pt-1 md:pt-0">
             
-            {/* Staircase Headline */}
-            <h1 className="max-w-5xl text-4xl sm:text-6xl lg:text-8xl font-bold leading-[0.98] uppercase tracking-wide text-[#2b3033] dark:text-white">
-              SCALING<br/>
-              THE<br/>
-              PLATFORM<br/>
-              <span className="block pl-12 sm:pl-32 lg:pl-64">FOR</span>
-              <span className="block pl-12 sm:pl-32 lg:pl-64">YOUR</span>
-              <span className="block pl-12 sm:pl-32 lg:pl-64 text-[#15BCDF]">BUSINESS</span>
+            {/* Headline */}
+            <h1 className="max-w-5xl text-3xl sm:text-4xl md:text-6xl lg:text-7xl xl:text-8xl font-bold leading-[1.08] md:leading-[0.98] uppercase tracking-wide text-[#2b3033] dark:text-white">
+              {/* Desktop Staircase */}
+              <span className="hidden md:inline">
+                SCALING<br/>
+                THE<br/>
+                PLATFORM<br/>
+                <span className="block pl-16 lg:pl-36 xl:pl-64">FOR</span>
+                <span className="block pl-16 lg:pl-36 xl:pl-64">YOUR</span>
+                <span className="block pl-16 lg:pl-36 xl:pl-64 text-[#15BCDF]">BUSINESS</span>
+              </span>
+
+              {/* Mobile Clean Headline */}
+              <span className="block md:hidden">
+                SCALING THE PLATFORM<br/>
+                FOR YOUR <span className="text-[#15BCDF]">BUSINESS</span>
+              </span>
             </h1>
 
             {/* CTA Button */}
-            <div className="mt-8 pl-12 sm:pl-32 lg:pl-64">
+            <div className="mt-5 md:mt-8 md:pl-16 lg:pl-36 xl:pl-64">
               <button 
                 onClick={() => openAuth(false)} 
-                className="btn-chamfered relative group flex items-center justify-center gap-3 bg-[#15BCDF] hover:bg-[#3fd0ef] border border-[#0fa3c2] px-8 py-4.5 text-xs font-bold uppercase tracking-[0.14em] text-[#1a1c1e] transition-all"
+                className="btn-chamfered relative group flex items-center justify-center gap-3 bg-[#15BCDF] hover:bg-[#3fd0ef] border border-[#0fa3c2] px-8 py-3.5 sm:py-4.5 text-xs font-bold uppercase tracking-[0.14em] text-[#1a1c1e] transition-all w-full sm:w-auto"
                 style={{
                   boxShadow: '0 0 0 1px rgba(21,188,223,0.35), 0 10px 30px -12px rgba(15,163,194,0.6)'
                 }}
@@ -290,10 +327,10 @@ export default function Auth({ setUser, addToast, theme, toggleTheme }) {
                 GET STARTED
                 <span className="w-6 h-px bg-[#1a1c1e] group-hover:w-8 transition-all" />
               </button>
-              <div className="mt-4 grid max-w-xl grid-cols-1 gap-2 sm:grid-cols-3">
-                <Link to="/user" className="rounded-lg border border-[#15BCDF]/40 bg-[#15BCDF]/10 px-4 py-3 text-center text-[10px] font-black uppercase tracking-wider text-[#15BCDF]">User Safety</Link>
-                <button onClick={() => openRole('merchant')} className="rounded-lg border border-slate-300 dark:border-white/10 px-4 py-3 text-[10px] font-black uppercase tracking-wider">Merchant</button>
-                <Link to="/guardian/login" className="rounded-lg border border-slate-300 dark:border-white/10 px-4 py-3 text-center text-[10px] font-black uppercase tracking-wider">Guardian</Link>
+              <div className="mt-3 sm:mt-4 grid max-w-xl grid-cols-3 gap-1.5 sm:gap-2">
+                <Link to="/user" className="rounded-lg border border-[#15BCDF]/40 bg-[#15BCDF]/10 px-2 sm:px-4 py-2.5 sm:py-3 text-center text-[9px] sm:text-[10px] font-black uppercase tracking-wider text-[#15BCDF] hover:bg-[#15BCDF]/20 transition-colors truncate">User Safety</Link>
+                <button onClick={() => openRole('merchant')} className="rounded-lg border border-slate-300 dark:border-white/10 px-2 sm:px-4 py-2.5 sm:py-3 text-[9px] sm:text-[10px] font-black uppercase tracking-wider hover:bg-slate-200 dark:hover:bg-white/5 transition-colors truncate">Merchant</button>
+                <Link to="/guardian/login" className="rounded-lg border border-slate-300 dark:border-white/10 px-2 sm:px-4 py-2.5 sm:py-3 text-center text-[9px] sm:text-[10px] font-black uppercase tracking-wider hover:bg-slate-200 dark:hover:bg-white/5 transition-colors truncate">Guardian</Link>
               </div>
             </div>
 
@@ -301,26 +338,26 @@ export default function Auth({ setUser, addToast, theme, toggleTheme }) {
         </section>
         
         {/* Section 2 — About */}
-        <section id="security" className="relative flex flex-wrap items-center gap-[40px] py-[clamp(60px,10vw,140px)] pl-[clamp(20px,9vw,118px)] pr-0 bg-gradient-to-b from-[#F2F1F0] via-[#F7F6F8] to-[#F7F6F8] dark:from-[#111] dark:to-[#1a1c1e]">
+        <section id="security" className="relative flex flex-wrap items-center gap-8 md:gap-[40px] py-14 sm:py-20 md:py-[clamp(60px,10vw,140px)] px-4 sm:px-6 md:pl-[clamp(20px,9vw,118px)] md:pr-0 bg-gradient-to-b from-[#F2F1F0] via-[#F7F6F8] to-[#F7F6F8] dark:from-[#111] dark:to-[#1a1c1e]">
           
           {/* Left Column */}
-          <div className="flex-1 min-w-[300px] max-w-[520px] z-10">
+          <div className="w-full md:flex-1 md:min-w-[300px] max-w-[520px] z-10">
             
-            <h2 className="text-[clamp(34px,6.5vw,72px)] font-bold leading-[0.98] uppercase tracking-wide text-[#2b3033] dark:text-white">
+            <h2 className="text-3xl sm:text-4xl md:text-[clamp(34px,6.5vw,72px)] font-bold leading-[1.05] md:leading-[0.98] uppercase tracking-wide text-[#2b3033] dark:text-white">
               BANK-GRADE<br/>
-              <span className="block pl-[min(160px,18vw)] text-[#15BCDF]">SECURITY</span>
+              <span className="block md:pl-[min(160px,18vw)] text-[#15BCDF]">SECURITY</span>
             </h2>
 
             {/* Copy verbatim */}
-            <p className="mt-[32px] ml-[min(160px,18vw)] text-[clamp(14px,1.6vw,17px)] line-height-[1.7] text-[#6b6f72] dark:text-slate-350 font-medium">
+            <p className="mt-4 md:mt-[32px] md:ml-[min(160px,18vw)] text-sm md:text-[clamp(14px,1.6vw,17px)] leading-relaxed text-[#6b6f72] dark:text-slate-350 font-medium">
               GuardX secures every transaction with military-grade encryption and real-time fraud detection. Your peace of mind is our top priority, ensuring safe, seamless, and transparent payments every time.
             </p>
 
             {/* Learn More Button */}
-            <div className="mt-[36px] ml-[min(160px,18vw)]">
+            <div className="mt-5 md:mt-[36px] md:ml-[min(160px,18vw)]">
               <button 
                 onClick={() => openAuth(true)}
-                className="btn-chamfered group flex items-center justify-center gap-3 bg-[#15BCDF] hover:bg-[#3fd0ef] border border-[#0fa3c2] px-8 py-4.5 text-xs font-bold uppercase tracking-[0.14em] text-[#1a1c1e] transition-all"
+                className="btn-chamfered group flex items-center justify-center gap-3 bg-[#15BCDF] hover:bg-[#3fd0ef] border border-[#0fa3c2] px-8 py-3.5 sm:py-4.5 text-xs font-bold uppercase tracking-[0.14em] text-[#1a1c1e] transition-all w-full sm:w-auto"
                 style={{
                   boxShadow: '0 0 0 1px rgba(21,188,223,0.35), 0 10px 30px -12px rgba(15,163,194,0.6)'
                 }}
@@ -333,27 +370,29 @@ export default function Auth({ setUser, addToast, theme, toggleTheme }) {
           </div>
 
           {/* Right Column */}
-          <div className="flex-1 min-w-[280px] flex justify-end relative">
-            <video 
-              ref={aboutVideoRef}
-              className="w-full max-w-[644px] h-auto object-cover z-0"
-              autoPlay 
-              muted 
-              loop 
-              playsInline
-              preload="auto"
-            >
-              <source src={ABOUT_VIDEO} type="video/mp4"/>
-            </video>
-            
-            {/* Overlay Cyan tint */}
-            <div className="absolute inset-0 right-0 w-full max-w-[644px] h-full bg-[#15BCDF] mix-blend-hue pointer-events-none z-10 opacity-70" />
+          <div className="w-full md:flex-1 md:min-w-[280px] flex justify-center md:justify-end relative mt-2 md:mt-0">
+            <div className="relative w-full max-w-[360px] md:max-w-[644px] overflow-hidden rounded-xl md:rounded-none">
+              <video 
+                ref={aboutVideoRef}
+                className="w-full h-auto object-cover z-0"
+                autoPlay 
+                muted 
+                loop 
+                playsInline
+                preload="auto"
+              >
+                <source src={ABOUT_VIDEO} type="video/mp4"/>
+              </video>
+              
+              {/* Overlay Cyan tint */}
+              <div className="absolute inset-0 right-0 w-full h-full bg-[#15BCDF] mix-blend-hue pointer-events-none z-10 opacity-70" />
+            </div>
           </div>
 
         </section>
 
         {/* Core Architecture Section */}
-        <section id="platform" className="px-6 py-24 md:px-12 md:py-32 max-w-7xl mx-auto">
+        <section id="platform" className="px-4 sm:px-6 md:px-12 py-16 md:py-32 max-w-7xl mx-auto">
           <motion.div {...reveal}>
             <div className="mb-16 grid gap-8 lg:grid-cols-2 lg:items-end">
               <div>
@@ -378,7 +417,7 @@ export default function Auth({ setUser, addToast, theme, toggleTheme }) {
         </section>
         
         {/* Steps Section */}
-        <section id="how" className="px-6 py-24 md:px-12 md:py-32 max-w-7xl mx-auto">
+        <section id="how" className="px-4 sm:px-6 md:px-12 py-16 md:py-32 max-w-7xl mx-auto">
           <motion.div {...reveal}>
             <p className="text-xs font-bold uppercase tracking-widest text-[#15BCDF]">Operations Protocol</p>
             <h2 className="mt-4 max-w-3xl text-3xl font-bold uppercase leading-[0.98] tracking-wide text-[#2b3033] dark:text-white md:text-5xl">Verify details in three steps.</h2>
@@ -414,7 +453,7 @@ export default function Auth({ setUser, addToast, theme, toggleTheme }) {
       <AnimatePresence>
         {modal && (
           <div className="fixed inset-0 z-[100] grid place-items-center overflow-y-auto bg-black/60 p-4 backdrop-blur-md" onMouseDown={e => e.target === e.currentTarget && setModal(false)}>
-            <motion.div initial={{ opacity: 0, y: 20, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 15 }} className="relative w-full max-w-md rounded-xl border border-slate-300 dark:border-white/10 bg-[#F2F1F0] dark:bg-[#1a1c1e] p-6 shadow-2xl md:p-8 text-[#2b3033] dark:text-white">
+            <motion.div initial={{ opacity: 0, y: 20, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 15 }} className="relative w-full max-w-md my-auto max-h-[92vh] overflow-y-auto rounded-xl border border-slate-300 dark:border-white/10 bg-[#F2F1F0] dark:bg-[#1a1c1e] p-5 sm:p-6 md:p-8 shadow-2xl text-[#2b3033] dark:text-white">
               
               <button onClick={() => setModal(false)} aria-label="Close" className="absolute right-5 top-5 grid h-9 w-9 place-items-center rounded-lg border border-slate-355 dark:border-white/10 hover:bg-slate-200 dark:hover:bg-white/5">
                 <X className="h-4.5 w-4.5"/>

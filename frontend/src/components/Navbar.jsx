@@ -37,13 +37,13 @@ export default function Navbar({ user, logout, theme, toggleTheme, simpleMode, t
 
   return (
     <nav className="fixed top-0 inset-x-0 z-50 h-16 bg-[#F2F1F0]/90 dark:bg-[#111]/90 backdrop-blur-xl border-b border-slate-300 dark:border-white/10 shadow-sm font-sans" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
-      <div className="max-w-7xl mx-auto px-4 h-full flex items-center justify-between gap-6">
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 h-full flex items-center justify-between gap-2 sm:gap-6">
 
         {/* Logo */}
-        <div className="flex items-center gap-3 shrink-0 cursor-pointer">
-          <img src="/guardx-icon.svg" alt="GuardX" className="w-9 h-9 rounded-lg shadow-md object-contain" />
+        <NavLink to="/" className="flex items-center gap-2.5 sm:gap-3 shrink-0 cursor-pointer">
+          <img src="/guardx-icon.svg" alt="GuardX" className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg shadow-md object-contain" />
           <span className="text-sm font-bold tracking-wider uppercase text-[#2b3033] dark:text-white">guardx<span className="text-[#15BCDF]">.</span></span>
-        </div>
+        </NavLink>
 
         {/* Desktop links */}
         <div className="hidden md:flex items-center gap-2 h-full py-3">
@@ -61,7 +61,7 @@ export default function Navbar({ user, logout, theme, toggleTheme, simpleMode, t
         </div>
 
         {/* Right controls */}
-        <div className="flex items-center gap-3 shrink-0">
+        <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
           {/* Simple mode toggle */}
           <button onClick={toggleSimpleMode} className={`p-2 rounded-lg transition-colors hidden sm:block ${simpleMode ? 'bg-[#15BCDF]/20 text-[#15BCDF]' : 'text-slate-500 dark:text-slate-350 hover:bg-slate-200 dark:hover:bg-slate-800'}`} title="Toggle Simple Mode">
             <Type className="w-5 h-5" />
@@ -93,7 +93,17 @@ export default function Navbar({ user, logout, theme, toggleTheme, simpleMode, t
 
       {/* Mobile dropdown */}
       {open && (
-        <div className="md:hidden absolute top-16 inset-x-0 bg-[#F2F1F0] dark:bg-[#1a1c1e] border-b border-slate-300 dark:border-slate-800 shadow-xl px-4 py-3 flex flex-col gap-1 z-[110]">
+        <div className="md:hidden absolute top-16 inset-x-0 bg-[#F2F1F0] dark:bg-[#1a1c1e] border-b border-slate-300 dark:border-slate-800 shadow-xl px-4 py-3 flex flex-col gap-1 z-[110] max-h-[calc(100vh-4rem)] overflow-y-auto">
+          <div className="sm:hidden px-3 py-2 mb-2 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+            <div>
+              <p className="text-xs font-bold text-[#2b3033] dark:text-slate-100">{user.name}</p>
+              <p className="text-[9px] font-bold text-[#15BCDF] uppercase tracking-widest">{user.role}</p>
+            </div>
+            <button onClick={toggleSimpleMode} className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold text-slate-500 dark:text-slate-350 bg-slate-200/60 dark:bg-slate-800/60">
+              <Type className="w-4 h-4" />
+              <span>Simple Mode</span>
+            </button>
+          </div>
           {links.map(({ to, label, Icon }) => (
             <NavLink key={to} to={to} end={to === '/'} onClick={() => setOpen(false)}
               className={({ isActive }) => cn(

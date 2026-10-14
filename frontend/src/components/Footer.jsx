@@ -6,7 +6,7 @@ export default function Footer() {
 
   return (
     <footer className="w-full bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 pt-16 pb-8 mt-auto z-10 shrink-0">
-      <div className="max-w-7xl mx-auto px-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10 lg:gap-8 mb-16">
           
           {/* Brand Column */}
@@ -60,7 +60,7 @@ export default function Footer() {
           <p className="text-xs font-semibold text-slate-400 dark:text-slate-500">
             © {currentYear} GuardX Technologies Inc. All rights heavily secured.
           </p>
-          <div className="flex items-center gap-6">
+          <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-6 text-center sm:text-left">
             <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors cursor-pointer w-max group">
               <Mail className="w-4 h-4 group-hover:scale-110 transition-transform" /> support@guardx.tech
             </div>
